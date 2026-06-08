@@ -1,0 +1,2163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Flotilla Vehicular</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700;9..40,800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── DARK MODE (default) ── */
+  :root {
+    --bg:      #070a10;
+    --bg2:     #0a0d14;
+    --bg3:     #0f1117;
+    --border:  #1a1f2e;
+    --border2: #1e2530;
+    --text:    #e2e8f0;
+    --text2:   #94a3b8;
+    --text3:   #475569;
+    --text4:   #334155;
+    --input-bg:#0a0d14;
+    --input-color:#e2e8f0;
+    --input-ph:#475569;
+    --select-opt:#0a0d14;
+    --modal-bg:#0f1117;
+    --scroll-track:#0a0d14;
+    --scroll-thumb:#2d3748;
+    --label-color:#94a3b8;
+    --info-bg:#070a10;
+    --info-border:#1a1f2e;
+    --info-lbl:#475569;
+    --info-val:#e2e8f0;
+    --card-bg:#0a0d14;
+    --card-border:#1a1f2e;
+    --toast-ok-bg:#052e16;
+    --toast-err-bg:#1c0a0a;
+  }
+
+  /* ── LIGHT MODE ── */
+  body.light {
+    --bg:      #f0f4f8;
+    --bg2:     #ffffff;
+    --bg3:     #f8fafc;
+    --border:  #dde3ec;
+    --border2: #c8d2de;
+    --text:    #0f172a;
+    --text2:   #334155;
+    --text3:   #64748b;
+    --text4:   #94a3b8;
+    --input-bg:#ffffff;
+    --input-color:#0f172a;
+    --input-ph:#94a3b8;
+    --select-opt:#ffffff;
+    --modal-bg:#ffffff;
+    --scroll-track:#e2e8f0;
+    --scroll-thumb:#94a3b8;
+    --label-color:#475569;
+    --info-bg:#f8fafc;
+    --info-border:#dde3ec;
+    --info-lbl:#64748b;
+    --info-val:#0f172a;
+    --card-bg:#ffffff;
+    --card-border:#dde3ec;
+    --toast-ok-bg:#dcfce7;
+    --toast-err-bg:#fee2e2;
+  }
+
+  body { background:var(--bg); color:var(--text); font-family:'DM Sans','Segoe UI',system-ui,sans-serif; min-height:100vh; transition:background 0.25s,color 0.25s; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--scroll-track); border-radius:4px; }
+  ::-webkit-scrollbar-thumb { background:var(--scroll-thumb); border-radius:4px; }
+  ::-webkit-scrollbar-thumb:hover { background:#22d3ee; }
+
+  /* ── INPUTS ── */
+  input::placeholder, textarea::placeholder { color:var(--input-ph); }
+  select option { background:var(--select-opt); color:var(--input-color); }
+  input[type=text], input[type=number], input[type=date], input[type=file], select, textarea {
+    background:var(--input-bg); border:1px solid var(--border2); color:var(--input-color);
+    border-radius:8px; padding:10px 14px; font-size:14px; outline:none;
+    font-family:inherit; width:100%; transition:border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color:#22d3ee; }
+  textarea { resize:vertical; }
+  label { color:var(--label-color); font-size:12px; font-weight:600; letter-spacing:0.06em; text-transform:uppercase; display:block; margin-bottom:6px; }
+  .field { display:flex; flex-direction:column; gap:4px; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+
+  /* ── CARDS ── */
+  .card-hover { transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s; }
+  .card-hover:hover { border-color:#22d3ee !important; transform:translateY(-2px); box-shadow:0 8px 24px rgba(34,211,238,0.08); }
+
+  /* ── BUTTONS ── */
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; border-radius:8px; padding:10px 18px; font-size:13px; font-weight:700; cursor:pointer; transition:opacity 0.15s,box-shadow 0.15s; letter-spacing:0.03em; border:none; font-family:inherit; }
+  .btn:hover { opacity:0.82; }
+  .btn-primary { background:#22d3ee; color:#000; }
+  .btn-ghost { background:transparent; color:var(--text2); border:1px solid var(--border2); }
+  .btn-ghost:hover { background:var(--bg2); opacity:1; }
+  .btn-success { background:rgba(74,222,128,0.15); color:#4ade80; border:1px solid rgba(74,222,128,0.35); }
+  .btn-danger  { background:rgba(248,113,113,0.15); color:#f87171; border:1px solid rgba(248,113,113,0.35); }
+  body.light .btn-success { background:rgba(22,163,74,0.1); color:#16a34a; border-color:rgba(22,163,74,0.4); }
+  body.light .btn-danger  { background:rgba(220,38,38,0.08); color:#dc2626; border-color:rgba(220,38,38,0.35); }
+  .btn-full { width:100%; }
+  .btn-sm { font-size:12px; padding:8px 10px; }
+
+  /* ── MODAL ── */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; backdrop-filter:blur(6px); animation:fadeIn 0.2s ease; }
+  .modal-box { background:var(--modal-bg); border:1px solid var(--border2); border-radius:16px; width:100%; max-width:900px; max-height:92vh; display:flex; flex-direction:column; box-shadow:0 30px 80px rgba(0,0,0,0.4); }
+  .modal-header { padding:24px 28px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-start; }
+  .modal-title { color:var(--text); font-size:20px; font-weight:700; letter-spacing:-0.02em; }
+  .modal-subtitle { color:var(--text3); font-size:13px; margin-top:4px; }
+  .modal-body { flex:1; overflow-y:auto; padding:24px 28px; background:var(--modal-bg); }
+  .modal-footer { padding:16px 28px; border-top:1px solid var(--border); display:flex; gap:10px; background:var(--modal-bg); border-radius:0 0 16px 16px; }
+  .close-btn { background:none; border:none; color:var(--text3); cursor:pointer; font-size:22px; line-height:1; padding:4px; }
+  .close-btn:hover { color:var(--text); }
+
+  /* ── GRIDS ── */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  .grid-actions { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+  .section-label { color:var(--text2); font-size:12px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; margin-bottom:12px; }
+
+  /* ── INFO BLOCKS ── */
+  .info-block { background:var(--info-bg); border:1px solid var(--info-border); border-radius:10px; padding:14px; }
+  .info-block .lbl { color:var(--info-lbl); font-size:11px; margin-bottom:4px; }
+  .info-block .val { color:var(--info-val); font-weight:600; font-size:14px; }
+  .maint-row { background:var(--info-bg); border:1px solid var(--info-border); border-radius:10px; padding:12px 16px; display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+
+  /* ── TOASTS ── */
+  .toast { position:fixed; top:20px; right:20px; z-index:2000; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:600; animation:slideDown 0.25s ease; box-shadow:0 8px 30px rgba(0,0,0,0.25); }
+  .toast-success { background:var(--toast-ok-bg);  border:1px solid #4ade80; color:#16a34a; }
+  .toast-error   { background:var(--toast-err-bg); border:1px solid #f87171; color:#dc2626; }
+  body:not(.light) .toast-success { color:#4ade80; }
+  body:not(.light) .toast-error   { color:#f87171; }
+
+  /* ── STATUS PILLS ── */
+  .status-pills { display:flex; gap:10px; flex-wrap:wrap; }
+  .status-pill { padding:10px 20px; border-radius:30px; font-size:13px; font-weight:700; cursor:pointer; border:2px solid transparent; transition:all 0.2s; letter-spacing:0.03em; }
+  .status-pill.active-op    { background:rgba(74,222,128,0.15);  border-color:#4ade80; color:#16a34a; }
+  .status-pill.active-mant  { background:rgba(250,204,21,0.15);  border-color:#facc15; color:#b45309; }
+  .status-pill.active-ale   { background:rgba(248,113,113,0.15); border-color:#f87171; color:#dc2626; }
+  .status-pill.active-admin { background:rgba(167,139,250,0.15); border-color:#a78bfa; color:#7c3aed; }
+  .status-pill.inactive      { background:var(--bg2); border-color:var(--border2); color:var(--text3); }
+  .status-pill.inactive-gray { background:rgba(148,163,184,0.12); border-color:rgba(148,163,184,0.3); color:var(--text2); }
+  body:not(.light) .status-pill.active-op    { color:#4ade80; }
+  body:not(.light) .status-pill.active-mant  { color:#facc15; }
+  body:not(.light) .status-pill.active-ale   { color:#f87171; }
+  body:not(.light) .status-pill.active-admin { color:#a78bfa; }
+</style>
+</head>
+<body>
+
+<!-- ── SPLASH SCREEN ── -->
+<div id="splash-screen" style="position:fixed;inset:0;background:#070a10;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:0;">
+
+  <!-- Partículas de fondo -->
+  <canvas id="splash-canvas" style="position:absolute;inset:0;opacity:0.35;"></canvas>
+
+  <!-- Contenido central -->
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:28px;">
+
+    <!-- Ícono con pulso -->
+    <div id="splash-icon" style="width:88px;height:88px;background:linear-gradient(135deg,#22d3ee22,#0891b222);border:1px solid #22d3ee44;border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:42px;animation:splashIconPulse 2s ease-in-out infinite;">
+      🚛
+    </div>
+
+    <!-- Título -->
+    <div style="text-align:center;">
+      <div id="splash-title" style="font-family:'DM Sans',sans-serif;font-size:32px;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#e2e8f0,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:splashFadeUp 0.6s ease both;">
+        Flotilla Vehicular
+      </div>
+      <div id="splash-sub" style="font-family:'DM Sans',sans-serif;color:#475569;font-size:14px;font-weight:500;margin-top:6px;animation:splashFadeUp 0.6s 0.15s ease both;opacity:0;">
+        Cargando información de tu flota…
+      </div>
+    </div>
+
+    <!-- Barra de progreso animada -->
+    <div style="width:260px;height:3px;background:#0f1117;border-radius:99px;overflow:hidden;animation:splashFadeUp 0.6s 0.25s ease both;opacity:0;" id="splash-bar-wrap">
+      <div id="splash-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#22d3ee,#0891b2);border-radius:99px;transition:width 0.4s ease;box-shadow:0 0 10px #22d3ee88;"></div>
+    </div>
+
+    <!-- Mensaje rotativo -->
+    <div id="splash-msg" style="font-family:'DM Mono',monospace;color:#334155;font-size:12px;letter-spacing:0.05em;animation:splashFadeUp 0.6s 0.3s ease both;opacity:0;min-height:18px;">
+      Conectando con Google Sheets…
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes splashIconPulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(34,211,238,0); transform:scale(1); }
+  50%      { box-shadow:0 0 0 16px rgba(34,211,238,0.07); transform:scale(1.04); }
+}
+@keyframes splashFadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes splashOut {
+  0%   { opacity:1; transform:scale(1); }
+  60%  { opacity:1; transform:scale(1.015); }
+  100% { opacity:0; transform:scale(0.97); }
+}
+</style>
+
+<div id="app" style="max-width:1400px;margin:0 auto;padding:32px 24px;"></div>
+<div id="modal-container"></div>
+<div id="toast-container"></div>
+
+<script>
+let vehicles = [];
+let _selectedStatus = null; // almacena el estatus elegido en el modal de edición
+
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3BY1F4iFo-QeULqJGNvOCuVznXZHfTlfsNN-Xwgfv-nHx04AvOeVUfhgZEtkv1ELpRw/exec";
+const SHEET_URL       = "https://docs.google.com/spreadsheets/d/1mOTFHgkjFliZ5AX77SW-7aqZPgNbHSqBCClPd7dwEIY/edit?gid=674906336#gid=674906336";
+
+let sheetsConectado = true;
+
+async function apiGet(action, params = {}) {
+  if (!sheetsConectado) return null;
+  try {
+    const qs = new URLSearchParams({ action, ...params }).toString();
+    const res = await fetch(`${APPS_SCRIPT_URL}?${qs}`);
+    return await res.json();
+  } catch(e) {
+    console.error("API GET error:", e);
+    showToast("Error de conexión con Google Sheets", "error");
+    return null;
+  }
+}
+
+async function apiPost(action, data = {}) {
+  if (!sheetsConectado) return null;
+  try {
+    const res = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action, ...data })
+    });
+    return await res.json();
+  } catch(e) {
+    console.error("API POST error:", e);
+    showToast("Error al guardar en Google Sheets", "error");
+    return null;
+  }
+}
+
+async function cargarDatosDesdeSheets() {
+  try {
+    const [vData, mData, mtData, rData] = await Promise.all([
+      apiGet("getFlotilla"),
+      apiGet("getMultas"),
+      apiGet("getMantenimiento"),
+      apiGet("getResguardos")
+    ]);
+
+    if (!vData) {
+      showToast("No se pudo conectar con Google Sheets. Revisa la URL.", "error");
+      return;
+    }
+
+    // Indexar resguardos por ECO para lookup rápido
+    const resguardoMap = {};
+    (rData || []).forEach(r => {
+      const s = (v) => (v !== undefined && v !== null) ? String(v).trim() : "";
+      resguardoMap[s(r.ECO)] = {
+        direccion:  s(r.Direccion),
+        licencia:   s(r.Licencia),
+        domicilio:  s(r.Domicilio),
+        fachada:    s(r.Fachada),
+        gps:        s(r.GPS),
+        conductor:  s(r.Operador),
+      };
+    });
+
+    vehicles = vData.map(row => {
+      const multas = (mData || []).filter(m => m.ECO === row.ECO);
+      const mantos = (mtData || []).filter(m => m.ECO === row.ECO);
+      const v = rowToVehicle(row, multas, mantos);
+      // Inyectar resguardo desde hoja Resguardos
+      if (resguardoMap[v.id]) v.resguardo = resguardoMap[v.id];
+      return v;
+    });
+
+    sheetsConectado = true;
+    showToast(`✅ ${vehicles.length} vehículos cargados desde Google Sheets`);
+    render();
+  } catch(e) {
+    showToast("Error al cargar datos: " + e.message, "error");
+  }
+}
+
+function rowToVehicle(row, multas = [], mantos = []) {
+  const s = (val) => (val !== undefined && val !== null) ? String(val).trim() : "";
+  return {
+    id: s(row.ECO), plate: s(row.Placa),
+    model: (s(row.Marca) + (s(row.Submarca) ? " "+s(row.Submarca) : "") + " " + s(row.Año)).trim(),
+    year: parseInt(row.Año) || 0,
+    marca: s(row.Marca), submarca: s(row.Submarca),
+    type: s(row.Tipo), fuelType: s(row.Combustible),
+    driver: s(row.Conductor) || "Sin asignar",
+    location: s(row.Ubicacion) || "—",
+    usuario: s(row.Usuario) || "—",
+    mileage: s(row.Kilometraje) || "0",
+    status: s(row.Estatus) || "Sin Estatus",
+    fechaAlta: s(row.FechaAlta), motor: s(row.Motor), serie: s(row.Serie),
+    color: s(row.Color), estado: s(row.EstadoOrigen), prop: s(row.Propietario),
+    esquema: s(row.Esquema), facturadoPor: s(row.FacturadoPor),
+    beneficiario: s(row.Beneficiario), tabulador: s(row.Tabulador),
+    zona: s(row.Zona), ciudad: s(row.Ciudad), tienda: s(row.Tienda),
+    colaborador: s(row.Colaborador),
+    placaEmision: s(row.PlacaEmision), placaVencimiento: s(row.PlacaVencimiento),
+    tcEmision: s(row.TCEmision), tcVencimiento: s(row.TCVencimiento),
+    tenenciaVencimiento: s(row.TenenciaVencimiento),
+    verificacionVencimiento: s(row.VerificacionVencimiento),
+    verificationDate: s(row.TCVencimiento) || "—",
+    verificationStatus: s(row.EstatusPoliza) || "Vigente",
+    aseg: s(row.Aseguradora), poliza: s(row.NumPoliza),
+    polInicio: s(row.PolizaInicio), polTermino: s(row.PolizaTermino),
+    polDias: s(row.PolizaDias), polEstatus: s(row.EstatusPoliza),
+    lastMaintenance: s(row.UltimoMantenimiento) || "",
+    nextMaintenance: s(row.ProximoMantenimiento) || "",
+    qrGenerated: row.QRGenerado === "true",
+    qrText: s(row.QRText) || "",
+    links: {
+      factura:       s(row.LinkFactura),
+      tc:            s(row.LinkTC),
+      expediente:    s(row.LinkExpediente),
+      foto:          s(row.LinkFoto),
+      tenencia:      s(row.LinkTenencia),
+      fichaTenencia: s(row.LinkFichaTenencia),
+      polizaDigital: s(row.LinkPoliza),
+    },
+    resguardo: {
+      licencia:    s(row.ResguardoLicencia),
+      domicilio:   s(row.ResguardoDomicilio),
+      fachada:     s(row.ResguardoFachada),
+      gps:         s(row.ResguardoGPS),
+      direccion:   s(row.ResguardoDireccion),
+      conductor:   s(row.ResguardoConductor),
+    },
+    fines: multas.map(m => ({
+      multa_id: s(m.ID),
+      motivo:   s(m.Motivo),
+      cost:     parseFloat(m.Costo) || 0,
+      fecha:    s(m.Fecha),
+      evidencia: s(m.Evidencia)
+    })),
+    maintenanceHistory: mantos.map(m => ({
+      mant_id:     s(m.ID),
+      type:        s(m.Tipo),
+      description: s(m.Descripcion),
+      cost:        s(m.Costo),
+      date:        s(m.Fecha),
+      taller:      s(m.Taller)
+    }))
+  };
+}
+
+function vehicleToRow(v) {
+  return {
+    ECO: v.id, Placa: v.plate, Marca: v.marca, Submarca: v.submarca || "",
+    Año: v.year, Tipo: v.type, Combustible: v.fuelType,
+    Conductor: v.driver, Ubicacion: v.location, Usuario: v.usuario || "", Kilometraje: v.mileage,
+    Estatus: v.status, FechaAlta: v.fechaAlta || "",
+    Motor: v.motor || "", Serie: v.serie || "", Color: v.color || "",
+    EstadoOrigen: v.estado || "", Propietario: v.prop || "",
+    Esquema: v.esquema || "", FacturadoPor: v.facturadoPor || "",
+    Beneficiario: v.beneficiario || "", Tabulador: v.tabulador || "",
+    Zona: v.zona || "", Ciudad: v.ciudad || "", Tienda: v.tienda || "",
+    Colaborador: v.colaborador || "",
+    PlacaEmision: v.placaEmision || "", PlacaVencimiento: v.placaVencimiento || "",
+    TCEmision: v.tcEmision || "", TCVencimiento: v.tcVencimiento || "",
+    TenenciaVencimiento: v.tenenciaVencimiento || "",
+    VerificacionVencimiento: v.verificacionVencimiento || "",
+    Aseguradora: v.aseg || "", NumPoliza: v.poliza || "",
+    PolizaInicio: v.polInicio || "", PolizaTermino: v.polTermino || "",
+    PolizaDias: v.polDias || "", EstatusPoliza: v.polEstatus || "",
+    UltimoMantenimiento: v.lastMaintenance || "",
+    ProximoMantenimiento: v.nextMaintenance || "",
+    QRGenerado: v.qrGenerated ? "true" : "false",
+    QRText: v.qrText || "",
+    LinkFactura: v.links?.factura || "",
+    LinkTC: v.links?.tc || "",
+    LinkExpediente: v.links?.expediente || "",
+    LinkFoto: v.links?.foto || "",
+    LinkTenencia: v.links?.tenencia || "",
+    LinkFichaTenencia: v.links?.fichaTenencia || "",
+    LinkPoliza: v.links?.polizaDigital || "",
+    ResguardoLicencia:  v.resguardo?.licencia  || "",
+    ResguardoDomicilio: v.resguardo?.domicilio || "",
+    ResguardoFachada:   v.resguardo?.fachada   || "",
+    ResguardoGPS:       v.resguardo?.gps       || "",
+    ResguardoDireccion: v.resguardo?.direccion || "",
+    ResguardoConductor: v.resguardo?.conductor || "",
+  };
+}
+
+function showLoadingOverlay(msg = "Guardando en Google Sheets…") {
+  let el = document.getElementById("loading-overlay");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "loading-overlay";
+    el.style.cssText = "position:fixed;inset:0;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;z-index:3000;backdrop-filter:blur(4px);";
+    el.innerHTML = `<div style="background:#0f1117;border:1px solid #1e2530;border-radius:16px;padding:32px 40px;text-align:center;">
+      <div style="font-size:32px;margin-bottom:16px;animation:spin 1s linear infinite;display:inline-block">⟳</div>
+      <div id="loading-msg" style="color:#e2e8f0;font-weight:700;font-size:15px;">${msg}</div>
+      <div style="color:#475569;font-size:12px;margin-top:6px;">Conectando con Google Sheets…</div>
+    </div>`;
+    document.body.appendChild(el);
+    if (!document.getElementById("spin-style")) {
+      const s = document.createElement("style");
+      s.id = "spin-style";
+      s.textContent = "@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}";
+      document.head.appendChild(s);
+    }
+  } else {
+    document.getElementById("loading-msg").textContent = msg;
+    el.style.display = "flex";
+  }
+}
+function hideLoadingOverlay() {
+  const el = document.getElementById("loading-overlay");
+  if (el) el.style.display = "none";
+}
+
+const STATUS_CONFIG = {
+  "Operando":      { dot:"#4ade80", bg:"rgba(74,222,128,0.12)",  border:"rgba(74,222,128,0.3)",  label:"#4ade80" },
+  "Mantenimiento": { dot:"#facc15", bg:"rgba(250,204,21,0.12)",  border:"rgba(250,204,21,0.3)",  label:"#facc15" },
+  "Siniestrada":   { dot:"#f87171", bg:"rgba(248,113,113,0.12)", border:"rgba(248,113,113,0.3)", label:"#f87171" },
+  "Sin Uso":            { dot:"#94a3b8", bg:"rgba(148,163,184,0.10)", border:"rgba(148,163,184,0.25)", label:"#94a3b8" },
+  "Uso Administrativo": { dot:"#a78bfa", bg:"rgba(167,139,250,0.10)", border:"rgba(167,139,250,0.25)", label:"#a78bfa" },
+  "Sin Estatus":        { dot:"#475569", bg:"rgba(71,85,105,0.10)",   border:"rgba(71,85,105,0.25)",   label:"#64748b" }
+};
+const VERIF_COLOR = { "Vigente":"#4ade80", "Próximo a Vencer":"#facc15", "Vencida":"#f87171" };
+
+let searchTerm = "";
+let filterStatus = "all";
+
+function getDaysUntil(dateStr) {
+  return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
+}
+function fmtDate(dateStr) {
+  if (!dateStr || dateStr === "—") return "—";
+  return new Date(dateStr).toLocaleDateString("es-MX");
+}
+function badge(status) {
+  const c = STATUS_CONFIG[status] || {};
+  return `<span style="display:inline-flex;align-items:center;gap:5px;background:${c.bg};border:1px solid ${c.border};color:${c.label};border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700;letter-spacing:0.05em;">
+    <span style="width:6px;height:6px;border-radius:50%;background:${c.dot};box-shadow:0 0 6px ${c.dot};flex-shrink:0;"></span>
+    ${status.toUpperCase()}
+  </span>`;
+}
+function showToast(msg, type="success") {
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  document.getElementById("toast-container").appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+function closeModal() {
+  document.getElementById("modal-container").innerHTML = "";
+}
+function openModal(html) {
+  document.getElementById("modal-container").innerHTML = html;
+}
+function buildModal(title, subtitle, bodyHtml, footerHtml) {
+  return `
+  <div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">${title}</div>
+          ${subtitle ? `<div class="modal-subtitle">${subtitle}</div>` : ""}
+        </div>
+        <button class="close-btn" onclick="closeModal()">✕</button>
+      </div>
+      <div class="modal-body">${bodyHtml}</div>
+      ${footerHtml ? `<div class="modal-footer">${footerHtml}</div>` : ""}
+    </div>
+  </div>`;
+}
+function selectOpts(arr, selected="") {
+  return arr.map(o => `<option value="${o}" ${o===selected?"selected":""}>${o}</option>`).join("");
+}
+
+function totalFinesCost(v) {
+  return (v.fines || []).reduce((sum, f) => {
+    const n = parseFloat((f.cost || "0").toString().replace(/[^0-9.]/g, "")) || 0;
+    return sum + n;
+  }, 0);
+}
+function totalGlobalFines() {
+  return vehicles.reduce((sum, v) => sum + totalFinesCost(v), 0);
+}
+function totalMaintenanceCost(v) {
+  return (v.maintenanceHistory || []).reduce((sum, h) => {
+    const n = parseFloat((h.cost || "0").toString().replace(/[^0-9.]/g, "")) || 0;
+    return sum + n;
+  }, 0);
+}
+function totalGlobalMaintenance() {
+  return vehicles.reduce((sum, v) => sum + totalMaintenanceCost(v), 0);
+}
+function fmtMoney(n) {
+  return "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ══════════════════════════════════════════════════════
+// MOTOR DE ALERTAS AUTOMÁTICAS
+// Documentos: Tarjeta Circulación, Póliza, Tenencia, Verificación, Mantenimiento
+// Umbrales: vencido = rojo, ≤30 días = amarillo
+// DESACTIVAR: basta con que la fecha de vencimiento sea futura (>30 días)
+//             o borrando la fecha del campo correspondiente
+// ══════════════════════════════════════════════════════
+const ALERT_DAYS = 30;
+
+function docAlertLevel(dateStr) {
+  if (!dateStr || dateStr === "—" || dateStr === "") return null;
+  const days = getDaysUntil(dateStr);
+  if (days < 0)           return "vencido";
+  if (days <= ALERT_DAYS) return "proximo";
+  return "vigente";
+}
+
+function getVehicleAlerts(v) {
+  const alerts = [];
+  const checks = [
+    { key:"tc",       label:"Tarjeta de Circulación", date: v.tcVencimiento || v.verificationDate },
+    { key:"poliza",   label:"Póliza de Seguro",       date: v.polTermino },
+    { key:"tenencia", label:"Tenencia",               date: v.tenenciaVencimiento },
+    { key:"verif",    label:"Verificación",           date: v.verificacionVencimiento },
+  ];
+  for (const c of checks) {
+    const level = docAlertLevel(c.date);
+    if (level === "vencido" || level === "proximo") {
+      const days = getDaysUntil(c.date);
+      alerts.push({
+        key: c.key, label: c.label, date: c.date, days, level,
+        color: level === "vencido" ? "#f87171" : "#facc15",
+        icon:  level === "vencido" ? "🔴" : "🟡",
+        text:  level === "vencido"
+          ? "Vencida el " + fmtDate(c.date)
+          : "Vence en " + days + " día" + (days !== 1 ? "s" : "") + " · " + fmtDate(c.date)
+      });
+    }
+  }
+  if (v.nextMaintenance) {
+    const days = getDaysUntil(v.nextMaintenance);
+    if (days < 0) {
+      alerts.push({ key:"maint", label:"Mantenimiento", days, level:"vencido", color:"#f87171", icon:"🔴", text:"Vencido el " + fmtDate(v.nextMaintenance) });
+    } else if (days <= ALERT_DAYS) {
+      alerts.push({ key:"maint", label:"Mantenimiento", days, level:"proximo", color:"#facc15", icon:"🟡", text:"En " + days + " día" + (days!==1?"s":"") + " · " + fmtDate(v.nextMaintenance) });
+    }
+  }
+  return alerts;
+}
+
+// autoUpdateStatus eliminado — el estatus es SIEMPRE manual.
+// Las alertas son solo un indicador visual independiente del estatus.
+function autoUpdateStatus(v) { /* no-op: estatus es manual */ }
+
+function docStatusBadge(dateStr) {
+  const level = docAlertLevel(dateStr);
+  if (!level) return "<span style=\"color:#475569;font-size:12px;\">Sin fecha</span>";
+  if (level === "vencido") return "<span style=\"color:#f87171;font-weight:700;font-size:12px;\">🔴 VENCIDA</span>";
+  if (level === "proximo") {
+    const d = getDaysUntil(dateStr);
+    return "<span style=\"color:#facc15;font-weight:700;font-size:12px;\">🟡 " + d + "d para vencer</span>";
+  }
+  return "<span style=\"color:#4ade80;font-weight:600;font-size:12px;\">✓ Vigente</span>";
+}
+
+// ══════════════════════════════════════════════════════
+// ✅ FIX: función separada para evitar backticks anidados
+// Antes era un IIFE escapado con \` que se renderizaba como texto
+// ══════════════════════════════════════════════════════
+function renderAlertsBlock(v) {
+  const alerts = getVehicleAlerts(v);
+  if (alerts.length === 0) return "";
+  const rows = alerts.map(function(a) {
+    return '<div style="display:flex;align-items:center;gap:10px;font-size:13px;">' +
+      '<span>' + a.icon + '</span>' +
+      '<span style="color:var(--text2);min-width:150px;">' + a.label + '</span>' +
+      '<span style="color:' + a.color + ';font-weight:600;">' + a.text + '</span>' +
+      '</div>';
+  }).join('');
+  return '<div style="background:rgba(248,113,113,0.05);border:1px solid rgba(248,113,113,0.2);border-radius:12px;padding:14px 18px;margin-bottom:20px;">' +
+    '<div style="color:#f87171;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">⚠️ Alertas Activas · ' + alerts.length + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:6px;">' + rows + '</div>' +
+    '</div>';
+}
+
+// ─── DETAIL MODAL ───
+function openDetailModal(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+
+  const finesList = v.fines || [];
+  const totalFines = totalFinesCost(v);
+
+  function row(lbl, val) {
+    const display = (val !== undefined && val !== null && val !== "") ? val : "—";
+    return `<div class="info-block"><div class="lbl">${lbl}</div><div class="val">${display}</div></div>`;
+  }
+  function fmtD(d){ return d && d !== "—" ? fmtDate(d) : "—"; }
+
+  const secHeader = (txt) => `<div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);">${txt}</div>`;
+
+  const body = `
+    <!-- ESTATUS RESUMEN -->
+    <div class="grid-3" style="margin-bottom:4px;">
+      <div class="info-block"><div class="lbl">Estatus</div>${badge(v.status)}</div>
+      <div class="info-block"><div class="lbl">Estatus Póliza</div>
+        <span style="color:${VERIF_COLOR[v.polEstatus||v.verificationStatus]||'#94a3b8'};font-weight:700;">${v.polEstatus||v.verificationStatus||"—"}</span>
+      </div>
+      <div class="info-block"><div class="lbl">Fecha de Alta</div><div class="val">${fmtD(v.fechaAlta)}</div></div>
+    </div>
+
+    <!-- ALERTAS ACTIVAS — CORREGIDO: usa función renderAlertsBlock en lugar de IIFE con backticks -->
+    ${renderAlertsBlock(v)}
+
+    ${secHeader("🚛 Datos Generales del Vehículo")}
+    <div class="grid-3">
+      ${row("N° Económico", v.id)}
+      ${row("Placa", v.plate)}
+      ${row("Marca", v.marca)}
+      ${row("Submarca", v.submarca)}
+      ${row("Modelo (Año)", v.year)}
+      ${row("Tipo de Vehículo", v.type)}
+      ${row("Color", v.color)}
+      ${row("Combustible", v.fuelType)}
+      ${row("Estado de Origen", v.estado)}
+      ${row("N° Motor", v.motor)}
+      ${row("# Serie", v.serie)}
+      ${row("Kilometraje", v.mileage)}
+    </div>
+
+    ${secHeader("👤 Asignación Operativa")}
+    <div class="grid-3">
+      ${row("Conductor Asignado", v.driver)}
+      ${row("Ubicación / Ruta", v.location)}
+      ${row("Usuario Beta", v.usuario)}
+      ${row("Zona", v.zona)}
+      ${row("Ciudad", v.ciudad)}
+      ${row("Tienda / Sucursal", v.tienda)}
+      ${row("Gerencia Responsable", v.colaborador)}
+    </div>
+
+    ${secHeader("🏢 Datos Administrativos")}
+    <div class="grid-3">
+      ${row("Propietario", v.prop)}
+      ${row("Esquema de Unidades", v.esquema)}
+      ${row("Facturado Por", v.facturadoPor)}
+      ${row("Beneficiario", v.beneficiario)}
+      ${row("Tabulador", v.tabulador)}
+    </div>
+
+    ${secHeader("📄 Placas & Tarjeta de Circulación")}
+    <div class="grid-2">
+      ${row("Emisión de Placas", fmtD(v.placaEmision))}
+      ${row("Vencimiento de Placas", fmtD(v.placaVencimiento))}
+      ${row("Emisión Tarjeta de Circulación", fmtD(v.tcEmision))}
+      <div class="info-block"><div class="lbl">Vencimiento Tarjeta de Circulación</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span class="val">${fmtD(v.tcVencimiento || v.verificationDate)}</span>
+          ${docStatusBadge(v.tcVencimiento || v.verificationDate)}
+        </div>
+      </div>
+      <div class="info-block"><div class="lbl">Vencimiento de Tenencia</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span class="val">${fmtD(v.tenenciaVencimiento)}</span>
+          ${docStatusBadge(v.tenenciaVencimiento)}
+        </div>
+      </div>
+      <div class="info-block"><div class="lbl">Vencimiento de Verificación</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span class="val">${fmtD(v.verificacionVencimiento)}</span>
+          ${docStatusBadge(v.verificacionVencimiento)}
+        </div>
+      </div>
+    </div>
+
+    ${secHeader("🔒 Seguro del Vehículo")}
+    <div class="grid-3">
+      ${row("Aseguradora", v.aseg)}
+      ${row("N° Póliza", v.poliza)}
+      ${row("Inicio de Póliza", fmtD(v.polInicio))}
+      <div class="info-block"><div class="lbl">Término de Póliza</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <span class="val">${fmtD(v.polTermino)}</span>
+          ${docStatusBadge(v.polTermino)}
+        </div>
+      </div>
+      ${row("Días de Vigencia", v.polDias ? v.polDias + " días" : "—")}
+      ${row("Estatus Póliza", v.polEstatus || v.verificationStatus)}
+    </div>
+
+    ${secHeader("🔗 Links de Documentos Digitales")}
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+      ${[
+        ["Factura / Carta Factura","factura"],
+        ["Tarjeta de Circulación","tc"],
+        ["Expediente Digital","expediente"],
+        ["Auto Foto","foto"],
+        ["Tenencia","tenencia"],
+        ["Ficha de Pago Tenencia","fichaTenencia"],
+        ["Póliza Digital","polizaDigital"]
+      ].map(([lbl,k])=>`
+        <div style="background:var(--info-bg);border:1px solid ${v.links&&v.links[k]?'rgba(34,211,238,0.2)':'var(--info-border)'};border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <span style="color:var(--text2);font-size:13px;white-space:nowrap;">${lbl}</span>
+          ${v.links&&v.links[k]
+            ? `<a href="${v.links[k]}" target="_blank" style="color:#22d3ee;font-size:12px;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;">🔗 Abrir enlace</a>`
+            : `<span style="color:var(--text4);font-size:12px;">Sin link registrado</span>`}
+        </div>`).join("")}
+    </div>
+
+    ${secHeader("🏠 Resguardo de la Unidad")}
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;">
+      ${v.resguardo?.direccion ? `
+        <div style="background:var(--info-bg);border:1px solid rgba(251,191,36,0.2);border-radius:8px;padding:10px 14px;">
+          <div style="color:var(--text3);font-size:11px;margin-bottom:3px;">📍 Dirección de Resguardo</div>
+          <div style="color:var(--text);font-size:13px;font-weight:600;">${v.resguardo.direccion}</div>
+        </div>` : ""}
+      ${[
+        ["🪪","Licencia del Conductor","licencia"],
+        ["🏠","Comprobante de Domicilio","domicilio"],
+        ["🏢","Fachada","fachada"],
+      ].map(([icon,lbl,k])=>`
+        <div style="background:var(--info-bg);border:1px solid ${v.resguardo&&v.resguardo[k]?'rgba(251,191,36,0.2)':'var(--info-border)'};border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <span style="color:var(--text2);font-size:13px;white-space:nowrap;">${icon} ${lbl}</span>
+          ${v.resguardo&&v.resguardo[k]
+            ? `<a href="${v.resguardo[k]}" target="_blank" style="color:#fbbf24;font-size:12px;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%;">🔗 Abrir enlace</a>`
+            : `<span style="color:var(--text4);font-size:12px;">Sin link registrado</span>`}
+        </div>`).join("")}
+        <div style="background:var(--info-bg);border:1px solid ${v.resguardo&&v.resguardo.gps?'rgba(96,165,250,0.3)':'var(--info-border)'};border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <span style="color:var(--text2);font-size:13px;white-space:nowrap;">📍 Ubicación GPS</span>
+          ${v.resguardo&&v.resguardo.gps
+            ? `<a href="${v.resguardo.gps}" target="_blank" class="btn btn-ghost btn-sm" style="border-color:rgba(96,165,250,0.4);color:#60a5fa;padding:5px 14px;font-size:12px;text-decoration:none;">📍 Ver en Maps</a>`
+            : `<span style="color:var(--text4);font-size:12px;">Sin link registrado</span>`}
+        </div>
+    </div>
+
+    ${secHeader("🔧 Historial de Mantenimiento")}
+    ${(v.maintenanceHistory||[]).length === 0
+      ? `<div style="color:var(--text3);font-size:13px;padding:16px 0;">Sin registros de mantenimiento.</div>`
+      : v.maintenanceHistory.map(h=>`
+        <div class="maint-row">
+          <div>
+            <div style="color:var(--text);font-weight:600;font-size:14px;">${h.type}</div>
+            <div style="color:var(--text3);font-size:12px;margin-top:2px;">${h.description}</div>
+            <div style="color:var(--text4);font-size:11px;margin-top:4px;font-family:'DM Mono',monospace;">${fmtDate(h.date)}</div>
+          </div>
+          <span style="color:#22d3ee;font-weight:700;font-size:15px;font-family:'DM Mono',monospace;">${h.cost}</span>
+        </div>`).join("")}
+
+    <div style="margin-top:8px;">
+      ${secHeader("🚨 Multas & Gastos")}
+      ${totalFines > 0 ? `
+      <div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.25);border-radius:10px;padding:8px 16px;display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <span style="color:#f87171;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;">Total acumulado</span>
+        <span style="color:#f87171;font-size:20px;font-weight:800;font-family:'DM Mono',monospace;">${fmtMoney(totalFines)}</span>
+      </div>` : ""}
+
+      ${finesList.length === 0
+        ? `<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px;">Sin multas o gastos registrados. Usa el botón <strong style="color:#f87171">🚨 Multas</strong> en la tarjeta para agregar.</div>`
+        : finesList.map((f, fi) => `
+          <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+              <div style="flex:1;">
+                <div style="color:var(--text);font-weight:700;font-size:14px;margin-bottom:4px;">${f.motivo}</div>
+                ${f.evidencia ? `<div style="color:var(--text3);font-size:12px;margin-bottom:4px;">📎 ${f.evidencia.startsWith("http") ? `<a href="${f.evidencia}" target="_blank" style="color:#22d3ee;text-decoration:none;">Ver evidencia →</a>` : f.evidencia}</div>` : ""}
+                <div style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace;">${f.fecha || "—"}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="color:#f87171;font-weight:800;font-size:16px;font-family:'DM Mono',monospace;">${fmtMoney(parseFloat(f.cost))}</span>
+                <button onclick="removeFine('${id}',${fi})" style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);color:#f87171;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700;">✕</button>
+              </div>
+            </div>
+          </div>`).join("")}
+    </div>
+  `;
+
+  const footer = `
+    <button class="btn btn-ghost" style="border-color:rgba(34,211,238,0.3);color:#22d3ee;" onclick="closeModal();openQRModal('${v.id}')">📋 Ver / Generar QR</button>
+
+    <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
+  `;
+
+  openModal(buildModal(`${v.id} · ${v.plate}`, `${v.model} · ${v.type} · ${v.year}`, body, footer));
+}
+
+function addFine(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const motivo    = document.getElementById(`fine-motivo-${id}`)?.value?.trim();
+  const costoRaw  = document.getElementById(`fine-costo-${id}`)?.value?.trim();
+  const fecha     = document.getElementById(`fine-fecha-${id}`)?.value;
+  const evidencia = document.getElementById(`fine-evidencia-${id}`)?.value?.trim();
+  if (!motivo) { showToast("Escribe el motivo de la multa", "error"); return; }
+  if (!costoRaw || isNaN(parseFloat(costoRaw)) || parseFloat(costoRaw) <= 0) {
+    showToast("Ingresa un costo válido mayor a cero", "error"); return;
+  }
+  if (!v.fines) v.fines = [];
+  const multaId = "MUL-" + Date.now();
+  const fineObj = {
+    multa_id: multaId,
+    motivo,
+    cost: parseFloat(costoRaw),
+    fecha: fecha ? fmtDate(fecha) : new Date().toLocaleDateString("es-MX"),
+    evidencia: evidencia || ""
+  };
+  v.fines.push(fineObj);
+  if (sheetsConectado) {
+    const multaRow = { ID: multaId, ECO: id, Placa: v.plate || "", Motivo: fineObj.motivo, Costo: fineObj.cost, Fecha: fineObj.fecha, Evidencia: fineObj.evidencia, Registrado: "Admin" };
+    apiPost("addMulta", { data: multaRow }).then(res => { if (res && res.ok) showToast(`✅ Multa guardada en Google Sheets`); });
+  }
+  showToast(`Multa registrada: ${fmtMoney(parseFloat(costoRaw))}`);
+  openDetailModal(id);
+  render();
+}
+
+function removeFine(id, idx) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v || !v.fines) return;
+  const removed = v.fines.splice(idx, 1);
+  if (sheetsConectado && removed[0]?.multa_id) {
+    apiPost("deleteMulta", { id: removed[0].multa_id }).then(res => { if (res && res.ok) showToast("✅ Multa eliminada de Google Sheets"); });
+  }
+  showToast("Multa eliminada");
+  openDetailModal(id);
+  render();
+}
+
+let nvTab = 0;
+function nvShowTab(n) {
+  nvTab = n;
+  for(let i=0;i<4;i++){
+    const s = document.getElementById(`nv-section-${i}`);
+    const b = document.getElementById(`nv-tab-${i}`);
+    if(s) s.style.display = i===n ? "block" : "none";
+    if(b){ b.style.background = i===n ? "#22d3ee" : "transparent"; b.style.color = i===n ? "#000" : "#94a3b8"; b.style.borderColor = i===n ? "#22d3ee" : "#1e2530"; }
+  }
+}
+
+function openNewModal() {
+  nvTab = 0;
+  const tabBar = `
+    <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;">
+      ${[["0","🚛 Vehículo"],["1","📄 Placas & Circulación"],["2","🔒 Seguro & Admin"],["3","🔗 Links & QR"]].map(([i,lbl])=>`
+        <button id="nv-tab-${i}" class="btn btn-ghost" style="font-size:12px;padding:7px 14px;" onclick="nvShowTab(${i})">${lbl}</button>
+      `).join("")}
+    </div>`;
+
+  const sec0 = `
+    <div id="nv-section-0">
+      <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;">Datos Generales del Vehículo</div>
+      <div class="grid-2">
+        <div class="field"><label>Fecha de Alta *</label><input id="nv-fecha" type="date" /></div>
+        <div class="field"><label>N° Económico *</label><input id="nv-eco" type="text" placeholder="ECO-001" /></div>
+        <div class="field"><label>Marca *</label><input id="nv-marca" type="text" placeholder="Toyota" /></div>
+        <div class="field"><label>Submarca</label><input id="nv-submarca" type="text" placeholder="Hilux" /></div>
+        <div class="field"><label>Modelo (Año) *</label><input id="nv-year" type="number" placeholder="2024" /></div>
+        <div class="field"><label>Placa *</label><input id="nv-plate" type="text" placeholder="ABC-123-XY" /></div>
+        <div class="field"><label>Estado de Origen</label><input id="nv-estado" type="text" placeholder="Ciudad de México" /></div>
+        <div class="field"><label>N° Motor</label><input id="nv-motor" type="text" placeholder="1GR-FE-0012345" /></div>
+        <div class="field" style="grid-column:span 2"><label># Serie</label><input id="nv-serie" type="text" placeholder="3N1AB7AP1JY123456" /></div>
+        <div class="field"><label>Tipo de Vehículo</label><select id="nv-type">${selectOpts(["Auto","Small Van","Large Van","Camión 3.5 Ton","Moto"])}</select></div>
+        <div class="field"><label>Color</label><input id="nv-color" type="text" placeholder="Blanco" /></div>
+        <div class="field" style="grid-column:span 2"><label>Propietario</label><input id="nv-prop" type="text" placeholder="Nombre completo del propietario" /></div>
+        <div class="field"><label>Esquema de Unidades</label><input id="nv-esquema" type="text" placeholder="Propia / Arrendada" /></div>
+        <div class="field"><label>Facturado Por</label><input id="nv-facturado" type="text" placeholder="Razón social" /></div>
+        <div class="field"><label>Beneficiario</label><input id="nv-beneficiario" type="text" placeholder="Nombre del beneficiario" /></div>
+        <div class="field"><label>Tabulador</label><input id="nv-tabulador" type="text" placeholder="T1 / T2" /></div>
+        <div class="field"><label>Combustible</label><select id="nv-fuel">${selectOpts(["Diesel","Gasolina","Híbrido","Eléctrico"])}</select></div>
+        <div class="field"><label>Kilometraje Actual</label><input id="nv-mileage" type="text" placeholder="0 km" /></div>
+        <div class="field"><label>Conductor Asignado</label><input id="nv-driver" type="text" placeholder="Nombre del conductor" /></div>
+        <div class="field"><label>Ubicación / Ruta</label><input id="nv-location" type="text" placeholder="Ruta Norte, Taller Central…" /></div>
+        <div class="field"><label>Usuario Beta</label><input id="nv-usuario" type="text" placeholder="Ej. BMEXS0001" /></div>
+        <div class="field"><label>Estatus Inicial</label><select id="nv-status">${selectOpts(["Operando","Mantenimiento","Siniestrada","Sin Uso","Uso Administrativo"])}</select></div>
+        <div class="field"><label>Zona</label><input id="nv-zona" type="text" placeholder="Norte / Sur / Centro…" /></div>
+        <div class="field"><label>Ciudad</label><input id="nv-ciudad" type="text" placeholder="Ciudad de México" /></div>
+        <div class="field"><label>Tienda / Sucursal</label><input id="nv-tienda" type="text" placeholder="Nombre de tienda" /></div>
+        <div class="field" style="grid-column:span 2"><label>Gerencia Responsable</label><input id="nv-colaborador" type="text" placeholder="Nombre de la gerencia" /></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:18px;">
+        <button class="btn btn-primary" onclick="nvShowTab(1)">Siguiente →</button>
+      </div>
+    </div>`;
+
+  const sec1 = `
+    <div id="nv-section-1" style="display:none;">
+      <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;">Placas y Tarjeta de Circulación</div>
+      <div class="grid-2">
+        <div class="field"><label>Fecha Emisión Placas</label><input id="nv-placa-emision" type="date" /></div>
+        <div class="field"><label>Fecha Vencimiento Placas</label><input id="nv-placa-vencimiento" type="date" /></div>
+        <div class="field"><label>Emisión Tarjeta Circulación</label><input id="nv-tc-emision" type="date" /></div>
+        <div class="field"><label>Vencimiento Tarjeta Circulación</label><input id="nv-tc-vencimiento" type="date" /></div>
+        <div class="field"><label>Vencimiento Tenencia</label><input id="nv-tenencia-venc" type="date" /></div>
+        <div class="field"><label>Vencimiento Verificación</label><input id="nv-verif-venc" type="date" /></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;">
+        <button class="btn btn-ghost" onclick="nvShowTab(0)">← Anterior</button>
+        <button class="btn btn-primary" onclick="nvShowTab(2)">Siguiente →</button>
+      </div>
+    </div>`;
+
+  const sec2 = `
+    <div id="nv-section-2" style="display:none;">
+      <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;">Seguro del Vehículo</div>
+      <div class="grid-2">
+        <div class="field" style="grid-column:span 2"><label>Aseguradora</label><input id="nv-aseg" type="text" placeholder="GNP, AXA, BBVA Seguros…" /></div>
+        <div class="field"><label>N° Póliza</label><input id="nv-poliza" type="text" placeholder="POL-2024-001234" /></div>
+        <div class="field"><label>Inicio de Póliza</label><input id="nv-pol-inicio" type="date" /></div>
+        <div class="field"><label>Término de Póliza</label><input id="nv-pol-termino" type="date" /></div>
+        <div class="field"><label>Días de Vigencia</label><input id="nv-pol-dias" type="number" placeholder="365" readonly style="color:#64748b;" /></div>
+        <div class="field"><label>Estatus Póliza</label><select id="nv-pol-estatus">${selectOpts(["Vigente","Próximo a Vencer","Vencida","En Trámite"])}</select></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;">
+        <button class="btn btn-ghost" onclick="nvShowTab(1)">← Anterior</button>
+        <button class="btn btn-primary" onclick="nvShowTab(3)">Siguiente →</button>
+      </div>
+    </div>`;
+
+  const sec3 = `
+    <div id="nv-section-3" style="display:none;">
+      <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;">Links de Documentos Digitales</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="field"><label>Factura o Carta Factura</label><input id="nv-link-factura" type="text" placeholder="https://drive.google.com/..." /></div>
+        <div class="field"><label>Tarjeta de Circulación</label><input id="nv-link-tc" type="text" placeholder="https://drive.google.com/..." /></div>
+        <div class="field"><label>Expediente Digital</label><input id="nv-link-expediente" type="text" placeholder="https://drive.google.com/..." /></div>
+        <div class="field"><label>Auto Foto</label><input id="nv-link-foto" type="text" placeholder="https://drive.google.com/..." /></div>
+        <div class="field"><label>Tenencia</label><input id="nv-link-tenencia" type="text" placeholder="https://drive.google.com/..." /></div>
+        <div class="field"><label>Ficha de Pago de Tenencia</label><input id="nv-link-ficha-tenencia" type="text" placeholder="https://drive.google.com/..." /></div>
+        <div class="field"><label>Póliza Digital</label><input id="nv-link-poliza" type="text" placeholder="https://drive.google.com/..." /></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;">
+        <button class="btn btn-ghost" onclick="nvShowTab(2)">← Anterior</button>
+        <button class="btn btn-primary" onclick="registerVehicle()">✅ Registrar Vehículo</button>
+      </div>
+    </div>`;
+
+  const body = tabBar + sec0 + sec1 + sec2 + sec3;
+  openModal(buildModal("Registrar Nuevo Vehículo", "Completa las 4 secciones", body, `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>`));
+  setTimeout(() => nvShowTab(0), 10);
+}
+
+function g(id){ return document.getElementById(id)?.value?.trim() || ""; }
+
+function registerVehicle() {
+  const eco = g("nv-eco"), plate = g("nv-plate"), marca = g("nv-marca"), year = g("nv-year");
+  if (!eco || !plate || !marca || !year) { showToast("Completa: N° Económico, Placa, Marca y Año", "error"); nvShowTab(0); return; }
+  if (vehicles.find(v => v.id === eco)) { showToast("Ya existe un vehículo con ese N° Económico", "error"); return; }
+
+  const newV = {
+    id: eco, plate, model: `${marca}${g("nv-submarca") ? " "+g("nv-submarca") : ""} ${year}`.trim(),
+    year: parseInt(year), marca, submarca: g("nv-submarca"),
+    type: g("nv-type")||"Otro", fuelType: g("nv-fuel")||"Gasolina",
+    driver: g("nv-driver")||"Sin asignar", location: g("nv-location")||"Base Central", usuario: g("nv-usuario")||"—",
+    mileage: g("nv-mileage")||"0 km", status: g("nv-status")||"Operando",
+    fechaAlta: g("nv-fecha"), motor: g("nv-motor"), serie: g("nv-serie"),
+    color: g("nv-color"), estado: g("nv-estado"), prop: g("nv-prop"),
+    esquema: g("nv-esquema"), facturadoPor: g("nv-facturado"), beneficiario: g("nv-beneficiario"),
+    tabulador: g("nv-tabulador"), zona: g("nv-zona"), ciudad: g("nv-ciudad"),
+    tienda: g("nv-tienda"), colaborador: g("nv-colaborador"),
+    placaEmision: g("nv-placa-emision"), placaVencimiento: g("nv-placa-vencimiento"),
+    tcEmision: g("nv-tc-emision"), tcVencimiento: g("nv-tc-vencimiento"),
+    tenenciaVencimiento: g("nv-tenencia-venc"), verificacionVencimiento: g("nv-verif-venc"),
+    verificationDate: g("nv-tc-vencimiento")||"—", verificationStatus: g("nv-pol-estatus")||"Vigente",
+    aseg: g("nv-aseg"), poliza: g("nv-poliza"), polInicio: g("nv-pol-inicio"),
+    polTermino: g("nv-pol-termino"), polDias: g("nv-pol-dias"), polEstatus: g("nv-pol-estatus"),
+    lastMaintenance: new Date().toISOString().split("T")[0],
+    nextMaintenance: new Date(Date.now()+90*24*60*60*1000).toISOString().split("T")[0],
+    maintenanceHistory: [], fines: [],
+    links: { factura: g("nv-link-factura"), tc: g("nv-link-tc"), expediente: g("nv-link-expediente"),
+      foto: g("nv-link-foto"), tenencia: g("nv-link-tenencia"), fichaTenencia: g("nv-link-ficha-tenencia"), polizaDigital: g("nv-link-poliza") }
+  };
+  vehicles.push(newV);
+  if (sheetsConectado) {
+    showLoadingOverlay("Guardando vehículo…");
+    apiPost("saveVehiculo", { data: vehicleToRow(newV) }).then(res => {
+      hideLoadingOverlay();
+      if (res && res.ok) showToast(`✅ ${eco} guardado en Google Sheets`);
+      else showToast("Guardado local OK · Error en Sheets", "error");
+    });
+  }
+  closeModal(); showToast(`Vehículo ${eco} registrado`); render();
+}
+
+let evTab = 0;
+function evShowTab(n, id) {
+  evTab = n;
+  for (let i = 0; i < 4; i++) {
+    const s = document.getElementById(`ev-section-${i}`);
+    const b = document.getElementById(`ev-tab-${i}`);
+    if (s) s.style.display = i === n ? "block" : "none";
+    if (b) { b.style.background = i===n?"#22d3ee":"transparent"; b.style.color = i===n?"#000":"#94a3b8"; b.style.borderColor = i===n?"#22d3ee":"#1e2530"; }
+  }
+}
+
+function getStatusInfoText(status) {
+  if (status === "Operando")            return "🟢 El vehículo estará marcado como <strong style='color:#4ade80'>Operando</strong>.";
+  if (status === "Mantenimiento")       return "🟡 El vehículo se marcará en <strong style='color:#facc15'>Mantenimiento</strong>.";
+  if (status === "Siniestrada")         return "🔴 El vehículo está marcado como <strong style='color:#f87171'>Siniestrada</strong>.";
+  if (status === "Sin Uso")             return "⚪ El vehículo está marcado como <strong style='color:#94a3b8'>Sin Uso</strong>.";
+  if (status === "Uso Administrativo")  return "🏢 El vehículo está marcado como <strong style='color:#a78bfa'>Uso Administrativo</strong>.";
+  return "";
+}
+
+function evSelectStatus(s) {
+  _selectedStatus = s; // guardar en variable global, no depender del DOM
+  const el = document.getElementById("ev-status");
+  if (el) el.value = s;
+  ["Operando","Mantenimiento","Siniestrada","Sin Uso","Uso Administrativo"].forEach(opt => {
+    const pill = document.getElementById(`ev-pill-${opt.replace(/ /g,"-")}`);
+    if (!pill) return;
+    const activeClass = opt==="Operando"?"active-op":opt==="Mantenimiento"?"active-mant":opt==="Siniestrada"?"active-ale":opt==="Uso Administrativo"?"active-admin":"inactive-gray";
+    pill.className = "status-pill " + (opt===s ? activeClass : "inactive");
+  });
+  const info = document.getElementById("ev-status-info");
+  if (info) info.innerHTML = getStatusInfoText(s);
+}
+
+function openEditModal(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+
+  const tabBar = `
+    <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap;">
+      ${[["0","🚛 Vehículo"],["1","📄 Placas & Circulación"],["2","🔒 Seguro"],["3","🔗 Links"]].map(([i,lbl])=>`
+        <button id="ev-tab-${i}" class="btn btn-ghost" style="font-size:12px;padding:7px 14px;" onclick="evShowTab(${i},'${id}')">${lbl}</button>
+      `).join("")}
+    </div>`;
+
+  const sec0 = `
+    <div id="ev-section-0">
+      <div class="grid-2">
+        <div class="field"><label>Fecha de Alta</label><input id="ev-fecha" type="date" value="${v.fechaAlta||""}" /></div>
+        <div class="field"><label>N° Económico (no editable)</label><input id="ev-eco" type="text" value="${v.id||""}" readonly style="color:#64748b;cursor:not-allowed;" /></div>
+        <div class="field"><label>Marca</label><input id="ev-marca" type="text" value="${v.marca||""}" /></div>
+        <div class="field"><label>Submarca</label><input id="ev-submarca" type="text" value="${v.submarca||""}" /></div>
+        <div class="field"><label>Año</label><input id="ev-year" type="number" value="${v.year||""}" /></div>
+        <div class="field"><label>Placa</label><input id="ev-plate" type="text" value="${v.plate||""}" /></div>
+        <div class="field"><label>Estado de Origen</label><input id="ev-estado" type="text" value="${v.estado||""}" /></div>
+        <div class="field"><label>N° Motor</label><input id="ev-motor" type="text" value="${v.motor||""}" /></div>
+        <div class="field" style="grid-column:span 2"><label># Serie</label><input id="ev-serie" type="text" value="${v.serie||""}" /></div>
+        <div class="field"><label>Tipo</label><select id="ev-type">${selectOpts(["Auto","Small Van","Large Van","Camión 3.5 Ton","Moto"],v.type)}</select></div>
+        <div class="field"><label>Color</label><input id="ev-color" type="text" value="${v.color||""}" /></div>
+        <div class="field"><label>Combustible</label><select id="ev-fuel">${selectOpts(["Diesel","Gasolina","Híbrido","Eléctrico"],v.fuelType)}</select></div>
+        <div class="field"><label>Kilometraje</label><input id="ev-mileage" type="text" value="${v.mileage||""}" /></div>
+        <div class="field" style="grid-column:span 2"><label>Propietario</label><input id="ev-prop" type="text" value="${v.prop||""}" /></div>
+        <div class="field"><label>Esquema</label><input id="ev-esquema" type="text" value="${v.esquema||""}" /></div>
+        <div class="field"><label>Facturado Por</label><input id="ev-facturado" type="text" value="${v.facturadoPor||""}" /></div>
+        <div class="field"><label>Beneficiario</label><input id="ev-beneficiario" type="text" value="${v.beneficiario||""}" /></div>
+        <div class="field"><label>Tabulador</label><input id="ev-tabulador" type="text" value="${v.tabulador||""}" /></div>
+        <div class="field"><label>Conductor</label><input id="ev-driver" type="text" value="${v.driver||""}" /></div>
+        <div class="field"><label>Ubicación</label><input id="ev-location" type="text" value="${v.location||""}" /></div>
+        <div class="field"><label>Usuario Beta</label><input id="ev-usuario" type="text" value="${v.usuario||""}" /></div>
+        <div class="field"><label>Zona</label><input id="ev-zona" type="text" value="${v.zona||""}" /></div>
+        <div class="field"><label>Ciudad</label><input id="ev-ciudad" type="text" value="${v.ciudad||""}" /></div>
+        <div class="field"><label>Tienda</label><input id="ev-tienda" type="text" value="${v.tienda||""}" /></div>
+        <div class="field" style="grid-column:span 2"><label>Gerencia</label><input id="ev-colaborador" type="text" value="${v.colaborador||""}" /></div>
+      </div>
+      <div style="margin-top:20px;">
+        <label style="margin-bottom:12px;">Estatus del Vehículo</label>
+        <div class="status-pills">
+          ${["Operando","Mantenimiento","Siniestrada","Sin Uso","Uso Administrativo"].map(s=>{
+            const cls = s===v.status ? (s==="Operando"?"active-op":s==="Mantenimiento"?"active-mant":s==="Siniestrada"?"active-ale":s==="Uso Administrativo"?"active-admin":"inactive-gray") : "inactive";
+            const icon = s==="Operando"?"✅":s==="Mantenimiento"?"🔧":s==="Siniestrada"?"🚨":s==="Uso Administrativo"?"🏢":"⏸️";
+            return `<div class="status-pill ${cls}" id="ev-pill-${s.replace(/ /g,'-')}" onclick="evSelectStatus('${s}')">${icon} ${s}</div>`;
+          }).join("")}
+        </div>
+        <input type="hidden" id="ev-status" value="${v.status}" />
+        <div id="ev-status-info" style="margin-top:10px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.15);border-radius:10px;padding:10px 14px;font-size:13px;color:#94a3b8;">${getStatusInfoText(v.status)}</div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:18px;"><button class="btn btn-primary" onclick="evShowTab(1,'${id}')">Siguiente →</button></div>
+    </div>`;
+
+  const sec1 = `
+    <div id="ev-section-1" style="display:none;">
+      <div class="grid-2">
+        <div class="field"><label>Emisión Placas</label><input id="ev-placa-emision" type="date" value="${v.placaEmision||""}" /></div>
+        <div class="field"><label>Vencimiento Placas</label><input id="ev-placa-vencimiento" type="date" value="${v.placaVencimiento||""}" /></div>
+        <div class="field"><label>Emisión T.C.</label><input id="ev-tc-emision" type="date" value="${v.tcEmision||""}" /></div>
+        <div class="field"><label>Vencimiento T.C.</label><input id="ev-tc-vencimiento" type="date" value="${v.tcVencimiento||v.verificationDate||""}" /></div>
+        <div class="field"><label>Venc. Tenencia</label><input id="ev-tenencia-venc" type="date" value="${v.tenenciaVencimiento||""}" /></div>
+        <div class="field"><label>Venc. Verificación</label><input id="ev-verif-venc" type="date" value="${v.verificacionVencimiento||""}" /></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;">
+        <button class="btn btn-ghost" onclick="evShowTab(0,'${id}')">← Anterior</button>
+        <button class="btn btn-primary" onclick="evShowTab(2,'${id}')">Siguiente →</button>
+      </div>
+    </div>`;
+
+  const sec2 = `
+    <div id="ev-section-2" style="display:none;">
+      <div class="grid-2">
+        <div class="field" style="grid-column:span 2"><label>Aseguradora</label><input id="ev-aseg" type="text" value="${v.aseg||""}" /></div>
+        <div class="field"><label>N° Póliza</label><input id="ev-poliza" type="text" value="${v.poliza||""}" /></div>
+        <div class="field"><label>Inicio Póliza</label><input id="ev-pol-inicio" type="date" value="${v.polInicio||""}" /></div>
+        <div class="field"><label>Término Póliza</label><input id="ev-pol-termino" type="date" value="${v.polTermino||""}" /></div>
+        <div class="field"><label>Días Vigencia</label><input id="ev-pol-dias" type="number" value="${v.polDias||""}" /></div>
+        <div class="field"><label>Estatus Póliza</label><select id="ev-pol-estatus">${selectOpts(["Vigente","Próximo a Vencer","Vencida","En Trámite"],v.polEstatus||v.verificationStatus)}</select></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;">
+        <button class="btn btn-ghost" onclick="evShowTab(1,'${id}')">← Anterior</button>
+        <button class="btn btn-primary" onclick="evShowTab(3,'${id}')">Siguiente →</button>
+      </div>
+    </div>`;
+
+  const lks = v.links || {};
+  const sec3 = `
+    <div id="ev-section-3" style="display:none;">
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="field"><label>Factura</label><input id="ev-link-factura" type="text" value="${lks.factura||""}" /></div>
+        <div class="field"><label>Tarjeta de Circulación</label><input id="ev-link-tc" type="text" value="${lks.tc||""}" /></div>
+        <div class="field"><label>Expediente Digital</label><input id="ev-link-expediente" type="text" value="${lks.expediente||""}" /></div>
+        <div class="field"><label>Foto</label><input id="ev-link-foto" type="text" value="${lks.foto||""}" /></div>
+        <div class="field"><label>Tenencia</label><input id="ev-link-tenencia" type="text" value="${lks.tenencia||""}" /></div>
+        <div class="field"><label>Ficha Pago Tenencia</label><input id="ev-link-ficha-tenencia" type="text" value="${lks.fichaTenencia||""}" /></div>
+        <div class="field"><label>Póliza Digital</label><input id="ev-link-poliza" type="text" value="${lks.polizaDigital||""}" /></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:18px;">
+        <button class="btn btn-ghost" onclick="evShowTab(2,'${id}')">← Anterior</button>
+        <button class="btn btn-primary" onclick="saveEdit('${id}')">💾 Guardar Cambios</button>
+      </div>
+    </div>`;
+
+  openModal(buildModal("Editar Vehículo", `${v.id} · ${v.plate} · ${v.model}`, tabBar+sec0+sec1+sec2+sec3, `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>`));
+  _selectedStatus = v.status; // inicializar con estatus actual
+  setTimeout(() => evShowTab(0, id), 10);
+}
+
+function saveEdit(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const gv = (eid) => document.getElementById(eid)?.value?.trim() || "";
+  if (gv("ev-fecha"))        v.fechaAlta    = gv("ev-fecha");
+  if (gv("ev-marca"))        v.marca        = gv("ev-marca");
+  v.submarca = gv("ev-submarca");
+  if (gv("ev-year"))         v.year         = parseInt(gv("ev-year"));
+  if (gv("ev-plate"))        v.plate        = gv("ev-plate");
+  if (gv("ev-estado"))       v.estado       = gv("ev-estado");
+  if (gv("ev-motor"))        v.motor        = gv("ev-motor");
+  if (gv("ev-serie"))        v.serie        = gv("ev-serie");
+  const tipo = document.getElementById("ev-type")?.value; if (tipo) v.type = tipo;
+  if (gv("ev-color"))        v.color        = gv("ev-color");
+  const fuel = document.getElementById("ev-fuel")?.value; if (fuel) v.fuelType = fuel;
+  if (gv("ev-mileage"))      v.mileage      = gv("ev-mileage");
+  if (gv("ev-prop"))         v.prop         = gv("ev-prop");
+  if (gv("ev-esquema"))      v.esquema      = gv("ev-esquema");
+  if (gv("ev-facturado"))    v.facturadoPor = gv("ev-facturado");
+  if (gv("ev-beneficiario")) v.beneficiario = gv("ev-beneficiario");
+  if (gv("ev-tabulador"))    v.tabulador    = gv("ev-tabulador");
+  if (gv("ev-driver"))       v.driver       = gv("ev-driver");
+  if (gv("ev-location"))     v.location     = gv("ev-location");
+  if (gv("ev-usuario"))      v.usuario      = gv("ev-usuario");
+  if (gv("ev-zona"))         v.zona         = gv("ev-zona");
+  if (gv("ev-ciudad"))       v.ciudad       = gv("ev-ciudad");
+  if (gv("ev-tienda"))       v.tienda       = gv("ev-tienda");
+  if (gv("ev-colaborador"))  v.colaborador  = gv("ev-colaborador");
+  // Leer de variable global (el input hidden puede no estar en DOM al momento de guardar)
+  const status = _selectedStatus || document.getElementById("ev-status")?.value || v.status;
+  v.status = status;
+  _selectedStatus = null; // limpiar
+  v.model = `${v.marca}${v.submarca ? " " + v.submarca : ""} ${v.year}`.trim();
+  if (gv("ev-placa-emision"))     v.placaEmision     = gv("ev-placa-emision");
+  if (gv("ev-placa-vencimiento")) v.placaVencimiento = gv("ev-placa-vencimiento");
+  if (gv("ev-tc-emision"))        v.tcEmision        = gv("ev-tc-emision");
+  if (gv("ev-tc-vencimiento"))   { v.tcVencimiento = gv("ev-tc-vencimiento"); v.verificationDate = gv("ev-tc-vencimiento"); }
+  if (gv("ev-tenencia-venc"))     v.tenenciaVencimiento     = gv("ev-tenencia-venc");
+  if (gv("ev-verif-venc"))        v.verificacionVencimiento = gv("ev-verif-venc");
+  if (gv("ev-aseg"))       v.aseg       = gv("ev-aseg");
+  if (gv("ev-poliza"))     v.poliza     = gv("ev-poliza");
+  if (gv("ev-pol-inicio")) v.polInicio  = gv("ev-pol-inicio");
+  if (gv("ev-pol-termino"))v.polTermino = gv("ev-pol-termino");
+  if (gv("ev-pol-dias"))   v.polDias    = gv("ev-pol-dias");
+  const polEst = document.getElementById("ev-pol-estatus")?.value;
+  if (polEst) { v.polEstatus = polEst; v.verificationStatus = polEst; }
+  if (!v.links) v.links = {};
+  v.links.factura       = gv("ev-link-factura");
+  v.links.tc            = gv("ev-link-tc");
+  v.links.expediente    = gv("ev-link-expediente");
+  v.links.foto          = gv("ev-link-foto");
+  v.links.tenencia      = gv("ev-link-tenencia");
+  v.links.fichaTenencia = gv("ev-link-ficha-tenencia");
+  v.links.polizaDigital = gv("ev-link-poliza");
+  if (sheetsConectado) {
+    showLoadingOverlay(`Actualizando ${id}…`);
+    apiPost("saveVehiculo", { data: vehicleToRow(v) }).then(res => {
+      hideLoadingOverlay();
+      if (res && res.ok) showToast(`✅ ${id} actualizado en Google Sheets`);
+      else showToast("Local OK · Error Sheets", "error");
+    });
+  }
+  closeModal(); showToast(`${id} actualizado · ${v.status}`); render();
+}
+
+function openMaintenanceModal(id) {
+  const v = vehicles.find(x => x.id === id);
+  const hasPending = v.nextMaintenance && getDaysUntil(v.nextMaintenance) <= 30;
+  const pendingBlock = hasPending ? `
+    <div style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:16px;margin-bottom:4px;">
+      <div style="color:#facc15;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px;">⚠️ Mantenimiento Pendiente · ${fmtDate(v.nextMaintenance)}</div>
+      <div style="color:#94a3b8;font-size:13px;margin-bottom:14px;">¿Qué deseas hacer con el mantenimiento programado?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <button class="btn btn-success btn-full" onclick="marcarMantenimientoRealizado('${id}')">✅ Realizado</button>
+        <button class="btn btn-ghost btn-full" style="border-color:rgba(250,204,21,0.4);color:#facc15;" onclick="reagendarMantenimiento('${id}')">📅 Reagendar</button>
+      </div>
+    </div>` : "";
+  const body = pendingBlock + `
+    <div style="display:flex;flex-direction:column;gap:16px;margin-top:${hasPending?'16px':'0'};">
+      <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Registrar Mantenimiento</div>
+      <div class="field"><label>Tipo *</label><select id="mant-tipo-${id}">${selectOpts(["Servicio Mayor","Servicio Menor","Reparación","Verificación"])}</select></div>
+      <div class="field">
+        <label>Fecha <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0;">(opcional — déjala vacía para guardar sin programar)</span></label>
+        <input type="date" id="mant-fecha-${id}" />
+      </div>
+      <div class="field"><label>Taller</label><input type="text" id="mant-taller-${id}" placeholder="Nombre del taller…" /></div>
+      <div class="field"><label>Descripción</label><textarea rows="3" id="mant-desc-${id}" placeholder="Detalles del servicio…"></textarea></div>
+      <div class="field"><label>Costo</label><input type="number" id="mant-costo-${id}" placeholder="0.00" min="0" step="0.01" /></div>
+      <div style="background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.15);border-radius:10px;padding:10px 14px;font-size:12px;color:#94a3b8;">
+        💡 <strong style="color:#e2e8f0;">Sin fecha:</strong> se guarda en el historial sin afectar el próximo mantenimiento programado.<br>
+        💡 <strong style="color:#e2e8f0;">Con fecha:</strong> se agenda y actualiza la fecha de próximo mantenimiento.
+      </div>
+    </div>`;
+  openModal(buildModal("Mantenimiento", `${v.id} · ${v.plate}`, body,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+     <button class="btn btn-ghost" style="border-color:rgba(74,222,128,0.4);color:#4ade80;" onclick="agendarMantenimiento('${v.id}', false)">💾 Guardar sin programar</button>
+     <button class="btn btn-primary" onclick="agendarMantenimiento('${v.id}', true)">📅 Agendar con fecha</button>`));
+}
+
+function marcarMantenimientoRealizado(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  closeModal();
+  // Pedir el costo real antes de registrar
+  const body = `
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="background:rgba(74,222,128,0.07);border:1px solid rgba(74,222,128,0.25);border-radius:10px;padding:14px 16px;">
+        <div style="color:#4ade80;font-size:13px;font-weight:700;margin-bottom:4px;">✅ Mantenimiento Programado · ${fmtDate(v.nextMaintenance)}</div>
+        <div style="color:#94a3b8;font-size:12px;">${v.id} · ${v.plate} · ${v.model}</div>
+      </div>
+      <div class="field"><label>Tipo de Servicio</label><select id="mant-real-tipo-${id}">${selectOpts(["Servicio Mayor","Servicio Menor","Reparación","Verificación"],"Servicio Programado")}</select></div>
+      <div class="field"><label>Costo Real del Servicio *</label><input type="number" id="mant-real-costo-${id}" placeholder="0.00" min="0" step="0.01" /></div>
+      <div class="field"><label>Taller</label><input type="text" id="mant-real-taller-${id}" placeholder="Nombre del taller…" /></div>
+      <div class="field"><label>Descripción adicional</label><textarea rows="2" id="mant-real-desc-${id}" placeholder="Observaciones…"></textarea></div>
+    </div>`;
+  openModal(buildModal("Confirmar Mantenimiento Realizado", `${v.id} · ${v.plate}`, body,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+     <button class="btn btn-success" onclick="confirmarMantenimientoRealizado('${id}')">✅ Confirmar y Guardar</button>`));
+}
+
+function confirmarMantenimientoRealizado(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const costoRaw = document.getElementById("mant-real-costo-"+id)?.value?.trim() || "0";
+  const costo = parseFloat(costoRaw.replace(/[^0-9.]/g,"")) || 0;
+  const tipo   = document.getElementById("mant-real-tipo-"+id)?.value   || "Servicio Programado";
+  const taller = document.getElementById("mant-real-taller-"+id)?.value?.trim() || "";
+  const desc   = document.getElementById("mant-real-desc-"+id)?.value?.trim()   || ("Mantenimiento realizado · " + fmtDate(v.nextMaintenance));
+  const mantObj = {
+    type: tipo,
+    description: desc,
+    cost: costo,
+    date: new Date().toISOString().split("T")[0],
+    taller: taller
+  };
+  if (!v.maintenanceHistory) v.maintenanceHistory = [];
+  v.maintenanceHistory.push(mantObj);
+  v.lastMaintenance = mantObj.date;
+  v.nextMaintenance = new Date(Date.now() + 90*24*60*60*1000).toISOString().split("T")[0];
+  if (sheetsConectado) {
+    const mantRow = { ID:"MNT-"+Date.now(), ECO:id, Placa: v.plate || "", Tipo:mantObj.type, Descripcion:mantObj.description, Costo:costo.toString(), Fecha:mantObj.date, Taller:taller };
+    showLoadingOverlay("Guardando mantenimiento…");
+    Promise.all([apiPost("addMantenimiento",{data:mantRow}), apiPost("saveVehiculo",{data:vehicleToRow(v)})]).then(()=>{ hideLoadingOverlay(); });
+  }
+  closeModal();
+  showToast("✅ Mantenimiento registrado: " + fmtMoney(costo));
+  render();
+}
+
+function reagendarMantenimiento(id) {
+  closeModal();
+  const v = vehicles.find(x => x.id === id);
+  const body = `
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div style="color:#facc15;font-size:13px;">Selecciona la nueva fecha para el mantenimiento de <strong>${v.id} · ${v.plate}</strong></div>
+      <div class="field"><label>Nueva Fecha *</label><input type="date" id="reagenda-fecha" /></div>
+      <div class="field"><label>Motivo del reagendo</label><textarea rows="2" id="reagenda-motivo" placeholder="Ej. Unidad en ruta, taller no disponible…"></textarea></div>
+    </div>`;
+  openModal(buildModal("Reagendar Mantenimiento", `${v.id} · ${v.plate}`, body,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+     <button class="btn btn-primary" style="border-color:rgba(250,204,21,0.4);background:#facc15;color:#000;" onclick="confirmarReagenda('${id}')">📅 Confirmar</button>`));
+}
+
+function confirmarReagenda(id) {
+  const v = vehicles.find(x => x.id === id);
+  const fecha = document.getElementById("reagenda-fecha")?.value;
+  if (!fecha) { showToast("Selecciona una fecha", "error"); return; }
+  v.nextMaintenance = fecha;
+  if (sheetsConectado) {
+    apiPost("saveVehiculo", { data: vehicleToRow(v) }).then(()=>{});
+  }
+  closeModal();
+  showToast("📅 Mantenimiento reagendado para " + fmtDate(fecha));
+  render();
+}
+
+function agendarMantenimiento(id, programar) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const tipo   = document.getElementById("mant-tipo-"+id)?.value || "Servicio Menor";
+  const fecha  = document.getElementById("mant-fecha-"+id)?.value || "";
+  const desc   = document.getElementById("mant-desc-"+id)?.value?.trim() || "";
+  const taller = document.getElementById("mant-taller-"+id)?.value?.trim() || "";
+  const costoRaw = document.getElementById("mant-costo-"+id)?.value?.trim() || "0";
+  const costo = parseFloat(costoRaw.replace(/[^0-9.]/g, "")) || 0;
+
+  // Si eligió "Agendar con fecha", la fecha es obligatoria
+  if (programar && !fecha) { showToast("Selecciona una fecha para agendar", "error"); return; }
+
+  const mantObj = { type: tipo, description: desc, cost: costo, date: fecha || new Date().toISOString().split("T")[0], taller };
+  if (!v.maintenanceHistory) v.maintenanceHistory = [];
+  v.maintenanceHistory.push(mantObj);
+
+  // Solo actualizar próximo mantenimiento si se programó con fecha
+  if (programar && fecha) {
+    v.nextMaintenance = fecha;
+  }
+
+  if (sheetsConectado) {
+    const mantRow = { ID:"MNT-"+Date.now(), ECO:id, Placa: v.plate || "", Tipo:tipo, Descripcion:desc, Costo:costo.toString(), Fecha:mantObj.date, Taller:taller };
+    showLoadingOverlay("Guardando mantenimiento…");
+    Promise.all([apiPost("addMantenimiento",{data:mantRow}), apiPost("saveVehiculo",{data:vehicleToRow(v)})]).then(([r1])=>{
+      hideLoadingOverlay();
+      if (r1?.ok) showToast("✅ Mantenimiento guardado"); else showToast("Error al guardar mantenimiento","error");
+    });
+  }
+  closeModal();
+  showToast(programar ? `📅 Mantenimiento agendado: ${fmtDate(fecha)}` : `💾 Mantenimiento guardado sin programar`);
+  render();
+}
+
+// ── RESGUARDO ──
+async function openResguardoModal(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const r = v.resguardo || {};
+
+  // Mostrar modal de carga mientras consultamos el Registro Diario
+  openModal(buildModal(
+    `🏠 Resguardo · ${v.id}`,
+    `${v.plate} · ${v.model} · Conductor: ${v.driver}`,
+    `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:16px;">
+       <div style="width:36px;height:36px;border:3px solid rgba(251,191,36,0.2);border-top-color:#fbbf24;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+       <div style="color:var(--text3);font-size:13px;">Buscando licencia en Registro Diario…</div>
+     </div>
+     <style>@keyframes spin{to{transform:rotate(360deg)}}</style>`,
+    ``
+  ));
+
+  // Consultar hoja Registros buscando el conductor asignado
+  let licenciaDesdeRegistro = "";
+  let registroEncontrado = false;
+  if (sheetsConectado && v.driver && v.driver !== "Sin asignar") {
+    try {
+      const datos = await apiGet("getRegistros", { conductor: v.driver });
+      if (datos && Array.isArray(datos) && datos.length > 0) {
+        // Tomar el registro más reciente (último del array)
+        const ultimo = datos[datos.length - 1];
+        licenciaDesdeRegistro = (ultimo.fotoLicencia || ultimo.FotoLicencia || "").trim();
+        registroEncontrado = true;
+      }
+    } catch(e) {
+      console.warn("No se pudo consultar Registros:", e);
+    }
+  }
+
+  // Si ya hay una licencia guardada en resguardo, usarla; si no, usar la del Registro Diario
+  const licenciaFinal = r.licencia || licenciaDesdeRegistro;
+
+  function linkRow(icon, label, url) {
+    if (!url) return `<div style="background:var(--info-bg);border:1px solid var(--info-border);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;"><span style="color:var(--text2);font-size:13px;">${icon} ${label}</span><span style="color:var(--text4);font-size:12px;">Sin link registrado</span></div>`;
+    return `<div style="background:var(--info-bg);border:1px solid rgba(34,211,238,0.2);border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;"><span style="color:var(--text2);font-size:13px;">${icon} ${label}</span><a href="${url}" target="_blank" style="color:#22d3ee;font-size:12px;text-decoration:none;">🔗 Abrir enlace</a></div>`;
+  }
+
+  const hasData = r.licencia || r.domicilio || r.fachada || r.gps;
+
+  const viewBlock = hasData ? `
+    <div style="margin-bottom:20px;">
+      <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">📍 Datos Registrados</div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        ${r.direccion ? `<div style="background:var(--info-bg);border:1px solid var(--info-border);border-radius:8px;padding:10px 14px;"><div style="color:var(--text3);font-size:11px;margin-bottom:3px;">Dirección de Resguardo</div><div style="color:var(--text);font-size:13px;font-weight:600;">${r.direccion}</div></div>` : ""}
+        ${linkRow("🪪","Licencia del Conductor", r.licencia)}
+        ${linkRow("🏠","Comprobante de Domicilio", r.domicilio)}
+        ${linkRow("🏢","Fachada", r.fachada)}
+        ${linkRow("📍","Ubicación GPS", r.gps)}
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--border);margin-bottom:20px;"></div>` : "";
+
+  // Badge de estado de la consulta al Registro Diario
+  const registroBadge = sheetsConectado && v.driver !== "Sin asignar"
+    ? registroEncontrado && licenciaDesdeRegistro
+      ? `<div style="background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+           <span style="font-size:14px;">✅</span>
+           <div><div style="color:#4ade80;font-size:12px;font-weight:700;">Licencia encontrada en Registro Diario</div>
+           <div style="color:var(--text3);font-size:11px;">Conductor: ${v.driver} · Registro más reciente</div></div>
+         </div>`
+      : registroEncontrado && !licenciaDesdeRegistro
+      ? `<div style="background:rgba(250,204,21,0.08);border:1px solid rgba(250,204,21,0.3);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+           <span style="font-size:14px;">⚠️</span>
+           <div><div style="color:#facc15;font-size:12px;font-weight:700;">Conductor encontrado pero sin foto de licencia</div>
+           <div style="color:var(--text3);font-size:11px;">El Registro Diario no tiene el campo fotoLicencia para ${v.driver}</div></div>
+         </div>`
+      : `<div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.2);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+           <span style="font-size:14px;">🔍</span>
+           <div><div style="color:#f87171;font-size:12px;font-weight:700;">No se encontró registro para: ${v.driver}</div>
+           <div style="color:var(--text3);font-size:11px;">Puedes pegar el link manualmente</div></div>
+         </div>`
+    : "";
+
+  const body = viewBlock + `
+    <div style="color:#fbbf24;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;">✏️ ${hasData ? "Actualizar" : "Registrar"} Resguardo</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div class="field">
+        <label>Dirección de Resguardo</label>
+        <input type="text" id="rsg-direccion-${id}" value="${r.direccion||""}" placeholder="Ej. Av. Principal 123, Col. Centro, CDMX" />
+      </div>
+      <div class="field">
+        <label>🪪 Licencia del Conductor (link)</label>
+        ${registroBadge}
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" id="rsg-licencia-${id}" value="${licenciaFinal}" placeholder="https://drive.google.com/..." style="flex:1;" />
+          ${licenciaFinal ? `<a href="${licenciaFinal}" target="_blank" class="btn btn-ghost btn-sm" style="border-color:rgba(74,222,128,0.3);color:#4ade80;white-space:nowrap;">👁 Ver</a>` : ""}
+        </div>
+        <div style="color:var(--text3);font-size:11px;margin-top:4px;">Traído automáticamente desde la hoja <strong style="color:var(--text2)">Registros</strong> · columna <strong style="color:var(--text2)">fotoLicencia</strong></div>
+      </div>
+      <div class="field">
+        <label>🏠 Comprobante de Domicilio (link)</label>
+        <input type="text" id="rsg-domicilio-${id}" value="${r.domicilio||""}" placeholder="https://drive.google.com/..." />
+      </div>
+      <div class="field">
+        <label>🏢 Fachada del lugar de resguardo (link foto)</label>
+        <input type="text" id="rsg-fachada-${id}" value="${r.fachada||""}" placeholder="https://drive.google.com/... o https://maps.app.goo.gl/..." />
+      </div>
+      <div class="field">
+        <label>📍 Ubicación GPS (link)</label>
+        <input type="text" id="rsg-gps-${id}" value="${r.gps||""}" placeholder="https://maps.google.com/?q=19.4326,-99.1332" />
+        <div style="color:var(--text3);font-size:11px;margin-top:4px;">Puedes pegar un link de Google Maps, Waze o coordenadas GPS</div>
+      </div>
+    </div>`;
+
+  openModal(buildModal(
+    `🏠 Resguardo · ${v.id}`,
+    `${v.plate} · ${v.model} · Conductor: ${v.driver}`,
+    body,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+     <button class="btn btn-primary" onclick="saveResguardo('${id}')">💾 Guardar Resguardo</button>`
+  ));
+}
+
+function saveResguardo(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const gv = (eid) => document.getElementById(eid)?.value?.trim() || "";
+  if (!v.resguardo) v.resguardo = {};
+  v.resguardo.conductor = v.driver || "";
+  v.resguardo.direccion = gv(`rsg-direccion-${id}`);
+  v.resguardo.licencia  = gv(`rsg-licencia-${id}`);
+  v.resguardo.domicilio = gv(`rsg-domicilio-${id}`);
+  v.resguardo.fachada   = gv(`rsg-fachada-${id}`);
+  v.resguardo.gps       = gv(`rsg-gps-${id}`);
+  if (sheetsConectado) {
+    showLoadingOverlay("Guardando resguardo…");
+    const resguardoRow = {
+      ECO:        v.id,
+      Placa:      v.plate,
+      Tienda:     v.tienda  || "",
+      Operador:   v.driver  || "",
+      Direccion:  v.resguardo.direccion,
+      Licencia:   v.resguardo.licencia,
+      Domicilio:  v.resguardo.domicilio,
+      Fachada:    v.resguardo.fachada,
+      GPS:        v.resguardo.gps,
+      FechaActualizacion: new Date().toLocaleDateString("es-MX")
+    };
+    apiPost("saveResguardo", { data: resguardoRow }).then(res => {
+      hideLoadingOverlay();
+      if (res && res.ok) showToast(`✅ Resguardo guardado en Google Sheets`);
+      else showToast("Guardado local OK · Error Sheets", "error");
+    });
+  }
+  closeModal();
+  showToast(`🏠 Resguardo de ${id} guardado`);
+  render();
+}
+
+function openFinesModal(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const finesList = v.fines || [];
+  const totalFines = totalFinesCost(v);
+  const body = `
+    <div style="background:var(--bg2);border:1px solid rgba(248,113,113,0.2);border-radius:12px;padding:18px;margin-bottom:16px;">
+      <div style="color:#f87171;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:14px;">➕ Registrar Multa / Gasto</div>
+      <div class="grid-2" style="gap:12px;margin-bottom:12px;">
+        <div class="field" style="grid-column:span 2"><label>Motivo *</label><input type="text" id="fine-motivo-${id}" placeholder="Ej. Infracción por exceso de velocidad…" /></div>
+        <div class="field"><label>Costo *</label><input type="number" id="fine-costo-${id}" placeholder="0.00" min="0" step="0.01" /></div>
+        <div class="field"><label>Fecha</label><input type="date" id="fine-fecha-${id}" /></div>
+        <div class="field" style="grid-column:span 2"><label>Evidencia</label><input type="text" id="fine-evidencia-${id}" placeholder="Link o descripción" /></div>
+      </div>
+      <button class="btn btn-danger" onclick="addFineFromModal('${id}')" style="width:100%;">Registrar Multa / Gasto</button>
+    </div>
+    ${totalFines > 0 ? `<div style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.25);border-radius:10px;padding:8px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <span style="color:#f87171;font-size:12px;font-weight:700;text-transform:uppercase;">Total acumulado</span>
+      <span style="color:#f87171;font-size:20px;font-weight:800;font-family:'DM Mono',monospace;">${fmtMoney(totalFines)}</span>
+    </div>` : ""}
+    ${finesList.length === 0
+      ? `<div style="color:#475569;font-size:13px;text-align:center;padding:20px;">Sin multas o gastos registrados.</div>`
+      : finesList.map((f, fi) => `
+        <div style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:14px 16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;">
+              <div style="color:var(--text);font-weight:700;font-size:14px;margin-bottom:4px;">${f.motivo}</div>
+              ${f.evidencia ? `<div style="color:var(--text3);font-size:12px;">${f.evidencia}</div>` : ""}
+              <div style="color:var(--text4);font-size:11px;font-family:'DM Mono',monospace;">${f.fecha || "—"}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="color:#f87171;font-weight:800;font-size:16px;font-family:'DM Mono',monospace;">${fmtMoney(parseFloat(f.cost))}</span>
+              <button onclick="removeFineFromModal('${id}',${fi})" style="background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);color:#f87171;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-weight:700;">✕</button>
+            </div>
+          </div>
+        </div>`).join("")}`;
+  openModal(buildModal(`🚨 Multas & Gastos · ${v.id}`, `${v.plate} · ${v.model}`, body,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>`));
+}
+
+function addFineFromModal(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const motivo    = document.getElementById("fine-motivo-"+id)?.value?.trim();
+  const costoRaw  = document.getElementById("fine-costo-"+id)?.value?.trim();
+  const fecha     = document.getElementById("fine-fecha-"+id)?.value;
+  const evidencia = document.getElementById("fine-evidencia-"+id)?.value?.trim();
+  if (!motivo) { showToast("Escribe el motivo", "error"); return; }
+  if (!costoRaw || parseFloat(costoRaw) <= 0) { showToast("Ingresa un costo válido", "error"); return; }
+  if (!v.fines) v.fines = [];
+  const multaId = "MUL-" + Date.now();
+  const fineObj = { multa_id: multaId, motivo, cost: parseFloat(costoRaw), fecha: fecha ? fmtDate(fecha) : new Date().toLocaleDateString("es-MX"), evidencia: evidencia || "" };
+  v.fines.push(fineObj);
+  if (sheetsConectado) {
+    const multaRow = { ID: multaId, ECO:id, Placa: v.plate || "", Motivo:fineObj.motivo, Costo:fineObj.cost, Fecha:fineObj.fecha, Evidencia:fineObj.evidencia };
+    apiPost("addMulta", { data: multaRow }).then(()=>{});
+  }
+  showToast("Multa registrada: " + fmtMoney(parseFloat(costoRaw)));
+  openFinesModal(id);
+  render();
+}
+
+function removeFineFromModal(id, idx) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v || !v.fines) return;
+  const removed = v.fines.splice(idx, 1);
+  if (sheetsConectado && removed[0]?.multa_id) {
+    apiPost("deleteMulta", { id: removed[0].multa_id }).then(()=>{});
+  }
+  showToast("Multa eliminada");
+  openFinesModal(id);
+  render();
+}
+
+function buildQRText(v) {
+  const lines = [`PLACA: ${v.plate}`, `MARCA: ${v.marca||v.model}`];
+  if (v.submarca) lines.push(`SUBMARCA: ${v.submarca}`);
+  const tcLink = v.links?.tc||"", polLink = v.links?.polizaDigital||"";
+  if (tcLink||polLink) { lines.push("","--- DOCUMENTOS ---"); if(tcLink) lines.push(`TARJETA CIRCULACION: ${tcLink}`); if(polLink) lines.push(`POLIZA DIGITAL: ${polLink}`); }
+  return lines.join("\n");
+}
+
+function openQRModal(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v) return;
+  const alreadyGenerated = !!v.qrGenerated;
+  const tcLink = v.links?.tc||"", polLink = v.links?.polizaDigital||"";
+  const body = `
+    <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap;">
+      <div style="flex:1;min-width:260px;">
+        <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:16px;">Datos codificados</div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px;">
+          <div class="info-block"><div class="lbl">Placa</div><div class="val">${v.plate}</div></div>
+          <div class="info-block"><div class="lbl">Marca</div><div class="val">${v.marca||v.model}</div></div>
+          ${v.submarca?`<div class="info-block"><div class="lbl">Submarca</div><div class="val">${v.submarca}</div></div>`:""}
+        </div>
+        <div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;">Links incluidos</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="background:var(--card-bg);border:1px solid ${tcLink?'rgba(74,222,128,0.25)':'var(--card-border)'};border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text2);font-size:13px;">Tarjeta de Circulación</span>
+            ${tcLink?`<span style="color:#4ade80;font-size:12px;font-weight:700;">✓ Incluido</span>`:`<span style="color:var(--text3);font-size:12px;">Sin link</span>`}
+          </div>
+          <div style="background:var(--card-bg);border:1px solid ${polLink?'rgba(74,222,128,0.25)':'var(--card-border)'};border-radius:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;">
+            <span style="color:var(--text2);font-size:13px;">Póliza Digital</span>
+            ${polLink?`<span style="color:#4ade80;font-size:12px;font-weight:700;">✓ Incluido</span>`:`<span style="color:var(--text3);font-size:12px;">Sin link</span>`}
+          </div>
+        </div>
+        ${alreadyGenerated?`
+        <div style="margin-top:18px;background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.25);border-radius:10px;padding:12px 14px;display:flex;gap:10px;align-items:center;">
+          <span style="font-size:18px;">🔒</span>
+          <div><div style="color:#f87171;font-size:13px;font-weight:700;">QR ya generado</div><div style="color:var(--text3);font-size:12px;margin-top:2px;">Solo se permite uno por unidad.</div></div>
+        </div>`:`
+        <div style="margin-top:18px;background:rgba(34,211,238,0.05);border:1px solid rgba(34,211,238,0.2);border-radius:10px;padding:12px 14px;">
+          <span style="color:var(--text2);font-size:12px;">Solo se puede generar <strong style="color:var(--text)">una vez</strong> por unidad.</span>
+        </div>`}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+        <div style="color:#94a3b8;font-size:12px;font-weight:600;text-transform:uppercase;">Código QR</div>
+        <div style="background:#fff;padding:12px;border-radius:12px;border:1px solid #1a1f2e;width:210px;height:210px;display:flex;align-items:center;justify-content:center;">
+          <div id="qr-canvas-${id}" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;">
+            ${alreadyGenerated?`<div id="qr-render-${id}"></div>`:`<svg width="60" height="60" viewBox="0 0 100 100" fill="none" stroke="#ccc" stroke-width="5"><rect x="10" y="10" width="30" height="30" rx="3"/><rect x="60" y="10" width="30" height="30" rx="3"/><rect x="10" y="60" width="30" height="30" rx="3"/><rect x="18" y="18" width="14" height="14" fill="#ccc" stroke="none"/><rect x="68" y="18" width="14" height="14" fill="#ccc" stroke="none"/><rect x="18" y="68" width="14" height="14" fill="#ccc" stroke="none"/></svg>`}
+          </div>
+        </div>
+        ${!alreadyGenerated
+          ?`<button class="btn btn-primary" style="width:210px;" onclick="generarQR('${id}')">⚡ Generar QR</button>`
+          :`<button class="btn btn-ghost" style="width:210px;" onclick="descargarQR('${id}')">⬇ Descargar PNG</button>`}
+        <p style="font-size:10px;color:#475569;text-align:center;">236 × 236 px · 300 DPI</p>
+      </div>
+    </div>`;
+  openModal(buildModal(`Código QR · ${v.id}`, `${[v.marca,v.submarca].filter(Boolean).join(" ")||v.model} · ${v.plate}`, body, `<button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>`));
+  if (alreadyGenerated && v.qrText) {
+    setTimeout(() => {
+      const el = document.getElementById(`qr-render-${id}`);
+      if (el) new QRCode(el, { text: v.qrText, width: 186, height: 186, correctLevel: QRCode.CorrectLevel.M });
+    }, 50);
+  }
+}
+
+function generarQR(id) {
+  const v = vehicles.find(x => x.id === id);
+  if (!v || v.qrGenerated) { showToast("Este vehículo ya tiene un QR", "error"); return; }
+  const text = buildQRText(v);
+  if (!text.trim()) { showToast("Sin datos para generar QR", "error"); return; }
+  const container = document.getElementById(`qr-canvas-${id}`);
+  if (!container) return;
+  container.innerHTML = "";
+  new QRCode(container, { text, width: 186, height: 186, correctLevel: QRCode.CorrectLevel.M });
+  v.qrGenerated = true; v.qrText = text;
+  setTimeout(() => { closeModal(); openQRModal(id); showToast(`QR generado para ${id}`); }, 400);
+}
+
+function descargarQR(id) {
+  const v = vehicles.find(x => x.id === id);
+  const nombre = v ? (v.plate||v.id) : id;
+  let canvas, img;
+  for (const sel of [`#qr-canvas-${id}`,`#qr-render-${id}`]) {
+    const el = document.querySelector(sel);
+    if (!el) continue;
+    canvas = el.querySelector("canvas"); img = el.querySelector("img");
+    if (canvas||img) break;
+  }
+  if (canvas) {
+    const tmp = document.createElement("canvas"); tmp.width = tmp.height = 236;
+    tmp.getContext("2d").drawImage(canvas, 0, 0, 236, 236);
+    tmp.toBlob(blob => { const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `qr-${nombre}.png`; a.click(); }, "image/png");
+  } else if (img) {
+    const a = document.createElement("a"); a.href = img.src; a.download = `qr-${nombre}.png`; a.click();
+  } else { showToast("No se encontró QR para descargar", "error"); }
+}
+
+function openNotificationsModal() {
+  const alertVehicles = vehicles.filter(v => getVehicleAlerts(v).length > 0);
+  const vencidos = alertVehicles.filter(v => getVehicleAlerts(v).some(a => a.level==="vencido"));
+  const proximos = alertVehicles.filter(v => !getVehicleAlerts(v).some(a=>a.level==="vencido") && getVehicleAlerts(v).some(a=>a.level==="proximo"));
+
+  function renderGroup(title, color, list) {
+    if (!list.length) return "";
+    return `<div style="color:${color};font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:16px 0 10px;">${title} · ${list.length}</div>` +
+      list.map(v => {
+        const alerts = getVehicleAlerts(v);
+        return `<div style="background:var(--card-bg);border:1px solid ${color}30;border-radius:10px;padding:16px;margin-bottom:10px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <div><span style="color:#22d3ee;font-family:'DM Mono',monospace;font-weight:600;font-size:13px;">${v.id}</span>
+            <span style="color:var(--text3);font-size:12px;margin-left:8px;">${v.plate} · ${v.model}</span></div>
+            ${badge(v.status)}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;">
+            ${alerts.map(a=>`<div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+              <span>${a.icon}</span><span style="color:var(--text2);min-width:160px;">${a.label}</span>
+              <span style="color:${a.color};font-weight:600;">${a.text}</span></div>`).join("")}
+          </div>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;" onclick="closeModal();openDetailModal('${v.id}')">Ver detalles →</button>
+        </div>`;
+      }).join("");
+  }
+
+  const body = alertVehicles.length === 0
+    ? `<div style="color:var(--text3);text-align:center;padding:60px 20px;"><div style="font-size:40px;margin-bottom:12px;">✅</div><div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">Todo en orden</div><div style="font-size:13px;">Sin documentos vencidos ni próximos a vencer.</div></div>`
+    : renderGroup("🔴 VENCIDOS","#f87171",vencidos) + renderGroup("🟡 PRÓXIMOS A VENCER","#facc15",proximos);
+
+  openModal(buildModal(
+    `Notificaciones · ${alertVehicles.length}`,
+    alertVehicles.length>0 ? `${vencidos.length} vencido(s) · ${proximos.length} próximo(s) a vencer` : null,
+    body, null
+  ));
+}
+
+function openOtrosModal() {
+  const ESTATUS_PRINCIPALES = ["Operando","Mantenimiento","Siniestrada","Sin Uso","Uso Administrativo"];
+  const otrosVeh = vehicles.filter(v => !ESTATUS_PRINCIPALES.includes(v.status));
+
+  // Agrupar por estatus real
+  const byStatus = {};
+  otrosVeh.forEach(v => {
+    const s = v.status && v.status.trim() !== "" ? v.status : "Sin Estatus";
+    if (!byStatus[s]) byStatus[s] = [];
+    byStatus[s].push(v);
+  });
+
+  const estatusList = Object.keys(byStatus).sort();
+
+  const body = otrosVeh.length === 0
+    ? `<div style="color:var(--text3);text-align:center;padding:60px 20px;">
+        <div style="font-size:40px;margin-bottom:12px;">📦</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px;">Sin vehículos en Otros</div>
+        <div style="font-size:13px;">Todos los vehículos tienen uno de los 4 estatus principales.</div>
+      </div>`
+    : estatusList.map(est => {
+        const lista = byStatus[est];
+        return `
+          <div style="margin-bottom:24px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div style="background:rgba(251,146,60,0.15);border:1px solid rgba(251,146,60,0.35);border-radius:8px;padding:4px 14px;color:#fb923c;font-size:12px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;">${est}</div>
+              <div style="color:#475569;font-size:12px;">${lista.length} unidad${lista.length!==1?'es':''}</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              ${lista.map(v => `
+                <div style="background:var(--info-bg);border:1px solid var(--info-border);border-radius:10px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                  <div>
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+                      <span style="color:#22d3ee;font-family:'DM Mono',monospace;font-weight:600;font-size:13px;">${v.id}</span>
+                      <span style="color:#475569;font-size:12px;">${v.plate}</span>
+                      <span style="background:rgba(251,146,60,0.12);border:1px solid rgba(251,146,60,0.3);color:#fb923c;border-radius:12px;padding:2px 9px;font-size:11px;font-weight:700;">${v.status||"Sin Estatus"}</span>
+                    </div>
+                    <div style="color:var(--text2);font-size:13px;font-weight:600;">${v.model}</div>
+                    <div style="color:#475569;font-size:12px;margin-top:2px;">👤 ${v.driver} · 📍 ${v.location} · 🚛 ${v.type||"—"}</div>
+                  </div>
+                  <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;border-color:rgba(34,211,238,0.3);color:#22d3ee;" onclick="closeModal();openDetailModal('${v.id}')">Ver detalles →</button>
+                </div>`).join('')}
+            </div>
+          </div>`;
+      }).join('');
+
+  const resumen = estatusList.map(s => `<span style="background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.25);border-radius:6px;padding:3px 10px;color:#fb923c;font-size:12px;font-weight:700;">${s}: ${byStatus[s].length}</span>`).join(' ');
+
+  openModal(buildModal(
+    `📦 Otros · ${otrosVeh.length} unidad${otrosVeh.length!==1?'es':''}`,
+    `Vehículos con estatus distinto a los 5 principales`,
+    `${otrosVeh.length>0?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;">${resumen}</div>`:''}${body}`,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>`
+  ));
+}
+
+function renderCards() {
+  // Guarda foco y posición del cursor antes de re-renderizar
+  const el  = document.getElementById("search-input");
+  const pos = el ? el.selectionStart : null;
+  render();
+  const el2 = document.getElementById("search-input");
+  if (el2 && pos !== null) {
+    el2.focus();
+    el2.setSelectionRange(pos, pos);
+  }
+}
+
+function render() {
+  const alertVehicles = vehicles.filter(v => getVehicleAlerts(v).length > 0);
+  const ESTATUS_PRINCIPALES = ["Operando","Mantenimiento","Siniestrada","Sin Uso","Uso Administrativo"];
+  const TIPOS_PRINCIPALES = ["Auto","Small Van","Large Van","Camion 3.5 Ton","Camión 3.5 Ton","Moto","Uso Administrativo"];
+  const counts = {
+    op:       vehicles.filter(v=>v.status==="Operando").length,
+    mant:     vehicles.filter(v=>v.status==="Mantenimiento").length,
+    sin:      vehicles.filter(v=>v.status==="Siniestrada").length,
+    nouse:    vehicles.filter(v=>v.status==="Sin Uso").length,
+    admin:    vehicles.filter(v=>v.status==="Uso Administrativo").length,
+    otros:    vehicles.filter(v=>!ESTATUS_PRINCIPALES.includes(v.status)).length,
+    otrosVeh: vehicles.filter(v=>!ESTATUS_PRINCIPALES.includes(v.status))
+  };
+  const globalFines = totalGlobalFines();
+
+  const filtered = vehicles.filter(v => {
+    const s = searchTerm.toLowerCase();
+    const matchSearch = (v.id.toLowerCase().includes(s)||v.plate.toLowerCase().includes(s)||(v.driver||"").toLowerCase().includes(s));
+    let matchFilter = true;
+    if (filterStatus !== "all") matchFilter = v.status === filterStatus;
+    return matchSearch && matchFilter;
+  });
+
+  document.getElementById("app").innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:36px;flex-wrap:wrap;gap:16px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+          <div style="width:36px;height:36px;background:linear-gradient(135deg,#22d3ee,#0891b2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🚛</div>
+          <h1 style="font-size:28px;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Flotilla Vehicular</h1>
+        </div>
+        <p style="color:var(--text3);font-size:14px;font-weight:500;">Gestión y control · ${vehicles.length} unidades registradas</p>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="position:relative;">
+          <button class="btn btn-ghost" onclick="openNotificationsModal()" style="position:relative;">🔔
+            ${alertVehicles.length>0?`<span style="position:absolute;top:-6px;right:-6px;background:#f87171;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;">${alertVehicles.length}</span>`:""}
+          </button>
+        </div>
+        ${window._SHEET_URL||(SHEET_URL&&SHEET_URL!=="PEGA_URL_DE_TU_GOOGLE_SHEET_AQUI")?`<button class="btn btn-ghost" onclick="window.open(window._SHEET_URL||'${SHEET_URL}','_blank')" style="border-color:rgba(74,222,128,0.3);color:#4ade80;">📊 Abrir Sheet</button>`:""}
+        <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-btn" style="padding:10px 12px;">${document.body.classList.contains("light")?"☀️":"🌙"}</button>
+        <button class="btn btn-primary" onclick="openNewModal()">＋ Nuevo Vehículo</button>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:14px;">
+      ${[["Total Flota","🚛",vehicles.length,"#22d3ee","all"],["Operando","✅",counts.op,"#4ade80","Operando"],["En Mantenimiento","🔧",counts.mant,"#facc15","Mantenimiento"],["Siniestradas","🚨",counts.sin,"#f87171","Siniestrada"],["Sin Uso","⏸️",counts.nouse,"#94a3b8","Sin Uso"],["Uso Administrativo","🏢",counts.admin,"#a78bfa","Uso Administrativo"]].map(([lbl,icon,val,color,filtro])=>`
+        <div onclick="filterStatus='${filtro}';render()" class="card-hover" style="background:${filterStatus===filtro?color+'18':'var(--card-bg)'};border:1px solid ${filterStatus===filtro?color+'80':'var(--card-border)'};border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s;${filterStatus===filtro?'box-shadow:0 0 20px '+color+'30;':''}">
+          <div style="width:44px;height:44px;border-radius:10px;background:${color}25;border:1px solid ${color}40;display:flex;align-items:center;justify-content:center;font-size:20px;">${icon}</div>
+          <div><div style="color:var(--text3);font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">${lbl}</div>
+          <div style="color:${filterStatus===filtro?color:'var(--text)'};font-size:26px;font-weight:800;letter-spacing:-0.03em;">${val}</div></div>
+        </div>`).join("")}
+      <div onclick="openOtrosModal()" class="card-hover" style="background:${counts.otros>0?'rgba(251,146,60,0.10)':'var(--card-bg)'};border:1px solid ${counts.otros>0?'rgba(251,146,60,0.4)':'var(--card-border)'};border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s;">
+        <div style="width:44px;height:44px;border-radius:10px;background:rgba(251,146,60,0.18);border:1px solid rgba(251,146,60,0.35);display:flex;align-items:center;justify-content:center;font-size:20px;">📦</div>
+        <div>
+          <div style="color:var(--text3);font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">Otros</div>
+          <div style="color:${counts.otros>0?'#fb923c':'var(--text)'};font-size:26px;font-weight:800;letter-spacing:-0.03em;">${counts.otros}</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
+      <div style="background:var(--card-bg);border:1px solid rgba(248,113,113,0.3);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:18px;">
+        <div style="width:48px;height:48px;border-radius:10px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚨</div>
+        <div style="flex:1;">
+          <div style="color:var(--text3);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Total Multas &amp; Gastos · Flota</div>
+          <div style="color:${globalFines>0?'#f87171':'#4ade80'};font-size:28px;font-weight:800;letter-spacing:-0.03em;font-family:'DM Mono',monospace;">${fmtMoney(globalFines)}</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:4px;">${vehicles.filter(v=>(v.fines||[]).length>0).length} unidad(es) con registros</div>
+        </div>
+      </div>
+      <div style="background:var(--card-bg);border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:18px;">
+        <div style="width:48px;height:48px;border-radius:10px;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔧</div>
+        <div style="flex:1;">
+          <div style="color:var(--text3);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Total Gasto Mantenimiento · Flota</div>
+          <div style="color:${totalGlobalMaintenance()>0?'#facc15':'#4ade80'};font-size:28px;font-weight:800;letter-spacing:-0.03em;font-family:'DM Mono',monospace;">${fmtMoney(totalGlobalMaintenance())}</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:4px;">${vehicles.reduce((a,v)=>a+(v.maintenanceHistory||[]).length,0)} servicio(s) registrado(s)</div>
+        </div>
+      </div>
+    </div>
+
+    ${alertVehicles.length>0?`
+    <div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.3);border-radius:12px;padding:14px 20px;margin-bottom:28px;display:flex;align-items:center;gap:14px;animation:fadeIn 0.3s ease;">
+      <span style="font-size:20px;">🚨</span>
+      <div style="flex:1;">
+        <div style="color:#f87171;font-weight:700;font-size:14px;">${alertVehicles.length} unidad(es) con documentos por atender</div>
+        <div style="color:var(--text3);font-size:12px;margin-top:3px;">${vehicles.filter(v=>getVehicleAlerts(v).some(a=>a.level==="vencido")).length} con documentos vencidos · ${vehicles.filter(v=>getVehicleAlerts(v).some(a=>a.level==="proximo")&&!getVehicleAlerts(v).some(a=>a.level==="vencido")).length} próximos a vencer</div>
+      </div>
+      <button class="btn btn-ghost" onclick="openNotificationsModal()" style="border-color:rgba(248,113,113,0.3);color:#f87171;font-size:12px;">Ver alertas</button>
+    </div>`:""}
+
+    <div style="display:flex;gap:12px;margin-bottom:28px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:240px;position:relative;">
+        <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px;pointer-events:none;">🔍</span>
+        <input type="text" id="search-input" placeholder="Buscar por ID, placa o conductor…" value="${searchTerm}"
+          style="width:100%;background:var(--input-bg);border:1px solid var(--border2);color:var(--input-color);border-radius:10px;padding:10px 14px 10px 40px;font-size:14px;outline:none;font-family:inherit;"
+          oninput="searchTerm=this.value;renderCards()"
+          onfocus="this.style.borderColor='#22d3ee'" onblur="this.style.borderColor='#1e2530'" />
+      </div>
+      <select onchange="filterStatus=this.value;render()"
+        style="background:var(--input-bg);border:1px solid var(--border2);color:var(--input-color);border-radius:10px;padding:10px 16px;font-size:14px;outline:none;cursor:pointer;font-family:inherit;">
+        <option value="all" ${filterStatus==="all"?"selected":""}>Todos</option>
+        <option value="Operando" ${filterStatus==="Operando"?"selected":""}>Operando</option>
+        <option value="Mantenimiento" ${filterStatus==="Mantenimiento"?"selected":""}>Mantenimiento</option>
+        <option value="Siniestrada" ${filterStatus==="Siniestrada"?"selected":""}>Siniestrada</option>
+        <option value="Sin Uso" ${filterStatus==="Sin Uso"?"selected":""}>Sin Uso</option>
+        <option value="Uso Administrativo" ${filterStatus==="Uso Administrativo"?"selected":""}>Uso Administrativo</option>
+        ${(()=>{
+          const otros = [...new Set(vehicles.filter(v=>!ESTATUS_PRINCIPALES.includes(v.status)).map(v=>v.status||"Sin Estatus"))].sort();
+          if (!otros.length) return "";
+          return '<optgroup label="── Otros ──" style="color:var(--text3);">' +
+            otros.map(s=>`<option value="${s}" ${filterStatus===s?"selected":""}>${s}</option>`).join("") +
+            '</optgroup>';
+        })()}
+      </select>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:20px;">
+      ${filtered.length===0?`
+        <div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;text-align:center;">
+          <div style="font-size:56px;margin-bottom:20px;opacity:0.3;">🚛</div>
+          <div style="color:#e2e8f0;font-size:20px;font-weight:700;margin-bottom:8px;">${vehicles.length===0?"No hay vehículos registrados":"Sin resultados"}</div>
+          <div style="color:#475569;font-size:14px;margin-bottom:28px;">${vehicles.length===0?"Comienza dando de alta tu primera unidad.":"Intenta con otro filtro."}</div>
+          ${vehicles.length===0?`<button class="btn btn-primary" onclick="openNewModal()">＋ Registrar primer vehículo</button>`:""}
+        </div>`:filtered.map(v=>{
+        const days = getDaysUntil(v.nextMaintenance);
+        const needsMaint = days<=30;
+        const vFines = totalFinesCost(v);
+        const vMaint = totalMaintenanceCost(v);
+        const vMaintCount = (v.maintenanceHistory||[]).length;
+        return `
+        <div class="card-hover" style="background:var(--card-bg);border:1px solid var(--card-border);border-radius:14px;padding:22px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;">
+            <div>
+              <div style="color:#22d3ee;font-size:13px;font-family:'DM Mono',monospace;font-weight:500;margin-bottom:2px;">${v.id}</div>
+              <div style="color:var(--text);font-size:17px;font-weight:700;letter-spacing:-0.02em;">${v.model}</div>
+              <div style="color:var(--text3);font-size:12px;margin-top:2px;">${v.plate} · ${v.type}</div>
+            </div>${badge(v.status)}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+            ${[["👤 Conductor",v.driver],["🆔 Usuario Beta",v.usuario],["🛣 Kilometraje",v.mileage]].map(([lbl,val])=>`
+              <div style="display:flex;justify-content:space-between;font-size:13px;">
+                <span style="color:var(--text3);">${lbl}</span>
+                <span style="color:var(--text);font-weight:500;font-family:'DM Mono',monospace;">${val}</span>
+              </div>`).join("")}
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#475569;">📋 Verificación</span>
+              <span style="color:${VERIF_COLOR[v.verificationStatus]||'#94a3b8'};font-weight:600;">${v.verificationStatus}</span>
+            </div>
+            ${(()=>{ const al=getVehicleAlerts(v).filter(a=>a.key!=='maint').slice(0,2); return al.length===0?'':al.map(a=>`<div style="display:flex;justify-content:space-between;font-size:12px;"><span style="color:#475569;">${a.icon} ${a.label}</span><span style="color:${a.color};font-weight:700;">${a.level==='vencido'?'VENCIDA':a.days+'d'}</span></div>`).join(""); })()}
+            ${(()=>{
+              const conductorResguardo = v.resguardo?.conductor || "";
+              const conductorActual = v.driver || "";
+              if (!conductorResguardo || !conductorActual || conductorActual === "Sin asignar") return "";
+              if (conductorResguardo.trim().toLowerCase() === conductorActual.trim().toLowerCase()) return "";
+              return `<div onclick="openResguardoModal('${v.id}')" style="display:flex;align-items:center;gap:8px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.35);border-radius:8px;padding:7px 10px;cursor:pointer;transition:background 0.2s;" title="Haz clic para actualizar el resguardo">
+                <span style="font-size:13px;">🔄</span>
+                <div style="flex:1;">
+                  <div style="color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Cambio de operador</div>
+                  <div style="color:#93c5fd;font-size:11px;margin-top:1px;">Resguardo: <strong>${conductorResguardo}</strong> → Actual: <strong>${conductorActual}</strong></div>
+                </div>
+                <span style="color:#60a5fa;font-size:11px;font-weight:700;white-space:nowrap;">Actualizar →</span>
+              </div>`;
+            })()}
+            <div style="display:flex;justify-content:space-between;font-size:13px;">
+              <span style="color:#475569;">🔧 Próx. Mant.</span>
+              <span style="color:${days<0?'#f87171':needsMaint?'#facc15':'#94a3b8'};font-weight:500;">${fmtDate(v.nextMaintenance)}${needsMaint&&days>0?`<span style="margin-left:5px;font-size:11px;background:rgba(250,204,21,0.15);padding:1px 6px;border-radius:4px;">${days}d</span>`:""}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;margin-top:2px;padding-top:10px;border-top:1px solid var(--border);">
+              <span style="color:#475569;">🔧 Mantenimiento</span>
+              <span style="display:flex;align-items:center;gap:6px;">
+                ${vMaintCount>0?`<span style="color:#475569;font-size:11px;">${vMaintCount} servicio${vMaintCount!==1?'s':''}</span>`:''}
+                <span style="color:${vMaint>0?'#facc15':'#4ade80'};font-weight:700;font-family:'DM Mono',monospace;">${vMaint>0?fmtMoney(vMaint):"Sin gastos"}</span>
+              </span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding-top:8px;">
+              <span style="color:#475569;">🚨 Multas & Gastos</span>
+              <span style="color:${vFines>0?'#f87171':'#4ade80'};font-weight:700;font-family:'DM Mono',monospace;">${vFines>0?fmtMoney(vFines):"Sin gastos"}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding-top:8px;">
+              <span style="color:#475569;">🏠 Resguardo</span>
+              <span style="color:${v.resguardo&&(v.resguardo.gps||v.resguardo.licencia)?'#fbbf24':'#475569'};font-weight:600;font-size:12px;">
+                ${v.resguardo&&v.resguardo.gps?`<a href="${v.resguardo.gps}" target="_blank" style="color:#fbbf24;text-decoration:none;">📍 Ver ubicación</a>`:v.resguardo&&v.resguardo.direccion?`📍 ${v.resguardo.direccion.substring(0,22)}…`:"Sin registrar"}</span>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="openDetailModal('${v.id}')">👁 Ver</button>
+            <button class="btn btn-ghost btn-sm" onclick="openEditModal('${v.id}')" style="border-color:rgba(168,85,247,0.3);color:#c084fc;">✏️ Editar</button>
+            <button class="btn btn-ghost btn-sm" onclick="openMaintenanceModal('${v.id}')" style="border-color:rgba(96,165,250,0.3);color:#60a5fa;">🔧 Mant.</button>
+            <button class="btn btn-ghost btn-sm" onclick="openResguardoModal('${v.id}')" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">🏠 Resg.</button>
+            <button class="btn btn-ghost btn-sm" onclick="openFinesModal('${v.id}')" style="border-color:rgba(248,113,113,0.3);color:#f87171;">🚨 Multas</button>
+            <button class="btn btn-ghost btn-sm" onclick="openQRModal('${v.id}')" style="border-color:rgba(34,211,238,0.3);color:#22d3ee;">📋 QR</button>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`;
+}
+
+function openConfigModal() {
+  const body = `
+    <div style="display:flex;flex-direction:column;gap:20px;">
+      <div style="background:rgba(250,204,21,0.06);border:1px solid rgba(250,204,21,0.2);border-radius:12px;padding:16px 20px;">
+        <div style="color:#facc15;font-weight:700;margin-bottom:10px;">📋 Pasos para conectar</div>
+        <ol style="color:#94a3b8;font-size:13px;line-height:2;padding-left:18px;">
+          <li>Crea un Google Sheet con hojas: <strong style="color:#e2e8f0">Vehículos, Multas, Mantenimiento</strong></li>
+          <li>Abre Apps Script → pega el código backend</li>
+          <li>Publica como Web App → Acceso: Cualquier persona</li>
+          <li>Copia la URL y pégala abajo</li>
+        </ol>
+      </div>
+      <div class="field"><label>URL de Apps Script *</label><input type="text" id="cfg-url" placeholder="https://script.google.com/macros/s/AKfy.../exec" /></div>
+      <div class="field"><label>URL de Google Sheet</label><input type="text" id="cfg-sheet" placeholder="https://docs.google.com/spreadsheets/d/..." /></div>
+    </div>`;
+  openModal(buildModal("Configurar Google Sheets","Conecta tu hoja de cálculo",body,
+    `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+     <button class="btn btn-primary" onclick="aplicarConfigSheets()">✅ Conectar</button>`));
+}
+
+async function aplicarConfigSheets() {
+  const url   = document.getElementById("cfg-url")?.value?.trim();
+  const sheet = document.getElementById("cfg-sheet")?.value?.trim();
+  if (!url) { showToast("Pega la URL de Apps Script", "error"); return; }
+  window._APPS_SCRIPT_URL = url;
+  window._SHEET_URL = sheet;
+  closeModal();
+  sheetsConectado = true;
+  window.apiGet = async (action, params={}) => {
+    try { const qs = new URLSearchParams({action,...params}).toString(); const res = await fetch(`${window._APPS_SCRIPT_URL}?${qs}`); return await res.json(); }
+    catch(e) { showToast("Error de conexión","error"); return null; }
+  };
+  window.apiPost = async (action, data={}) => {
+    try { const res = await fetch(window._APPS_SCRIPT_URL, {method:"POST",body:JSON.stringify({action,...data})}); return await res.json(); }
+    catch(e) { showToast("Error al guardar","error"); return null; }
+  };
+  await cargarDatosDesdeSheets();
+}
+
+function toggleTheme() {
+  const isDark = !document.body.classList.contains("light");
+  document.body.classList.toggle("light", isDark);
+  const btn = document.getElementById("theme-btn");
+  if (btn) btn.textContent = isDark ? "☀️" : "🌙";
+  localStorage.setItem("theme", isDark ? "light" : "dark");
+}
+
+// Restore saved theme
+(function() {
+  if (localStorage.getItem("theme") === "light") {
+    document.body.classList.add("light");
+    // btn not yet rendered, render() will pick it up
+  }
+})();
+
+async function init() {
+  // Arranca splash
+  initSplash();
+  splashProgress(10, "Conectando con Google Sheets…");
+
+  if (APPS_SCRIPT_URL && APPS_SCRIPT_URL !== "PEGA_TU_URL_AQUI") {
+    splashProgress(30, "Obteniendo vehículos…");
+    await cargarDatosDesdeSheets();
+    splashProgress(100, "¡Listo!");
+  } else {
+    sheetsConectado = false;
+    splashProgress(100, "Carga local lista");
+    render();
+  }
+  setTimeout(hideSplash, 420);
+}
+
+// ── SPLASH FUNCTIONS ──
+function initSplash() {
+  const canvas = document.getElementById("splash-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const dots = Array.from({length: 55}, () => ({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    r: Math.random() * 1.6 + 0.4,
+    vx: (Math.random() - 0.5) * 0.35,
+    vy: (Math.random() - 0.5) * 0.35,
+    a: Math.random() * 0.5 + 0.1
+  }));
+
+  let raf;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    dots.forEach(d => {
+      d.x += d.vx; d.y += d.vy;
+      if (d.x < 0) d.x = canvas.width;
+      if (d.x > canvas.width) d.x = 0;
+      if (d.y < 0) d.y = canvas.height;
+      if (d.y > canvas.height) d.y = 0;
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(34,211,238,${d.a})`;
+      ctx.fill();
+    });
+    // líneas entre puntos cercanos
+    for (let i = 0; i < dots.length; i++) {
+      for (let j = i+1; j < dots.length; j++) {
+        const dx = dots[i].x - dots[j].x, dy = dots[i].y - dots[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 110) {
+          ctx.beginPath();
+          ctx.moveTo(dots[i].x, dots[i].y);
+          ctx.lineTo(dots[j].x, dots[j].y);
+          ctx.strokeStyle = `rgba(34,211,238,${0.06 * (1 - dist/110)})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+    }
+    raf = requestAnimationFrame(draw);
+  }
+  draw();
+  canvas._stopRaf = () => cancelAnimationFrame(raf);
+
+  // Mensajes rotativos
+  const msgs = [
+    "Conectando con Google Sheets…",
+    "Cargando vehículos de la flota…",
+    "Obteniendo historial de multas…",
+    "Sincronizando mantenimientos…",
+    "Preparando el panel de control…"
+  ];
+  let mi = 0;
+  canvas._msgInterval = setInterval(() => {
+    mi = (mi + 1) % msgs.length;
+    const el = document.getElementById("splash-msg");
+    if (el) { el.style.opacity = "0"; setTimeout(() => { el.textContent = msgs[mi]; el.style.opacity = "1"; }, 200); }
+  }, 1800);
+}
+
+function splashProgress(pct, msg) {
+  const bar = document.getElementById("splash-bar");
+  const msgEl = document.getElementById("splash-msg");
+  if (bar) bar.style.width = pct + "%";
+  if (msg && msgEl) { msgEl.style.opacity = "0"; setTimeout(() => { msgEl.textContent = msg; msgEl.style.opacity = "1"; }, 150); }
+}
+
+function hideSplash() {
+  const splash = document.getElementById("splash-screen");
+  if (!splash) return;
+  const canvas = document.getElementById("splash-canvas");
+  if (canvas) {
+    if (canvas._stopRaf) canvas._stopRaf();
+    if (canvas._msgInterval) clearInterval(canvas._msgInterval);
+  }
+  splash.style.animation = "splashOut 0.55s ease forwards";
+  setTimeout(() => splash.remove(), 560);
+}
+
+init();
+
+// ── AUTO-REFRESH cada 15 segundos ──
+setInterval(async () => {
+  if (!sheetsConectado) return;
+  try {
+    const [vData, mData, mtData, rData] = await Promise.all([
+      apiGet("getFlotilla"),
+      apiGet("getMultas"),
+      apiGet("getMantenimiento"),
+      apiGet("getResguardos")
+    ]);
+    if (!vData) return;
+    const resguardoMap = {};
+    (rData || []).forEach(r => {
+      const s = (v) => (v !== undefined && v !== null) ? String(v).trim() : "";
+      resguardoMap[s(r.ECO)] = { direccion:s(r.Direccion), licencia:s(r.Licencia), domicilio:s(r.Domicilio), fachada:s(r.Fachada), gps:s(r.GPS), conductor:s(r.Operador) };
+    });
+    vehicles = vData.map(row => {
+      const multas = (mData || []).filter(m => m.ECO === row.ECO);
+      const mantos = (mtData || []).filter(m => m.ECO === row.ECO);
+      const v = rowToVehicle(row, multas, mantos);
+      if (resguardoMap[v.id]) v.resguardo = resguardoMap[v.id];
+      return v;
+    });
+    render();
+  } catch(e) { console.warn("Auto-refresh error:", e); }
+}, 10000);
+</script>
+</body>
+</html>
