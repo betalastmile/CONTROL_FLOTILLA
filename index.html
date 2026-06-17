@@ -229,7 +229,7 @@
 </style>
 
 <!-- ── SPLASH SCREEN ── -->
-<div id="splash-screen" style="position:fixed;inset:0;background:#070a10;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:0;">
+<div id="splash-screen" style="position:fixed;inset:0;background:#070a10;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:0;">
 
   <!-- Partículas de fondo -->
   <canvas id="splash-canvas" style="position:absolute;inset:0;opacity:0.35;"></canvas>
@@ -291,7 +291,7 @@
 // ══════════════════════════════════════════════════════
 const USUARIOS_PERMITIDOS = [
   { usuario: "BMEXS1795",    password: "RESA950115"   },
-  { usuario: "H4017", password: "MAAD931215"  },
+  { usuario: "BMEXH4017", password: "MAAD931215"  },
   // ← Agrega más usuarios aquí siguiendo el mismo formato
 ];
 // ══════════════════════════════════════════════════════
@@ -312,7 +312,12 @@ function doLogin() {
     const loginScreen = document.getElementById("login-screen");
     loginScreen.style.transition = "opacity 0.4s ease";
     loginScreen.style.opacity = "0";
-    setTimeout(() => { loginScreen.remove(); init(); }, 420);
+    setTimeout(() => {
+      loginScreen.remove();
+      const splash = document.getElementById("splash-screen");
+      if (splash) splash.style.display = "flex";
+      init();
+    }, 420);
   } else {
     errEl.style.display = "block";
     // Shake animation en el botón
@@ -330,8 +335,8 @@ function toggleLoginPass() {
   if (input) input.type = input.type === "password" ? "text" : "password";
 }
 
-// Partículas en el fondo del login
-(function initLoginCanvas() {
+// Partículas en el fondo del login — se inicia cuando el DOM está listo
+function initLoginCanvas() {
   const canvas = document.getElementById("login-canvas");
   if (!canvas) return;
   const ctx = canvas.getContext("2d");
@@ -359,7 +364,8 @@ function toggleLoginPass() {
     requestAnimationFrame(draw);
   }
   draw();
-})();
+}
+window.addEventListener("DOMContentLoaded", initLoginCanvas);
 
 // ══════════════════════════════════════════════════════
 
@@ -370,7 +376,7 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3BY1F4iFo-QeU
 const SHEET_URL       = "https://docs.google.com/spreadsheets/d/1mOTFHgkjFliZ5AX77SW-7aqZPgNbHSqBCClPd7dwEIY/edit?gid=674906336#gid=674906336";
 
 let sheetsConectado = true;
-BMEX
+
 async function apiGet(action, params = {}) {
   if (!sheetsConectado) return null;
   try {
