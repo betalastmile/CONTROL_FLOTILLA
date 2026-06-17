@@ -156,6 +156,78 @@
 </head>
 <body>
 
+<!-- ══════════════════════════════════════════
+     PANTALLA DE LOGIN
+     ══════════════════════════════════════════ -->
+<div id="login-screen" style="
+  position:fixed;inset:0;background:#070a10;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:10000;gap:0;
+">
+  <canvas id="login-canvas" style="position:absolute;inset:0;opacity:0.3;"></canvas>
+
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:32px;width:100%;max-width:380px;padding:24px;">
+
+    <!-- Ícono -->
+    <div style="width:76px;height:76px;background:linear-gradient(135deg,#22d3ee22,#0891b222);border:1px solid #22d3ee55;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;box-shadow:0 0 30px #22d3ee18;">
+      🚛
+    </div>
+
+    <!-- Título -->
+    <div style="text-align:center;">
+      <div style="font-family:'DM Sans',sans-serif;font-size:26px;font-weight:800;letter-spacing:-0.03em;background:linear-gradient(135deg,#e2e8f0,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
+        Flotilla Vehicular
+      </div>
+      <div style="color:#475569;font-size:13px;margin-top:6px;">Ingresa tus credenciales para continuar</div>
+    </div>
+
+    <!-- Formulario -->
+    <div style="width:100%;background:#0a0d14;border:1px solid #1e2530;border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:18px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="color:#475569;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Usuario</label>
+        <input id="login-user" type="text" placeholder="Tu usuario"
+          style="background:#070a10;border:1px solid #1e2530;color:#e2e8f0;border-radius:8px;padding:11px 14px;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s;"
+          onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"
+          onfocus="this.style.borderColor='#22d3ee'" onblur="this.style.borderColor='#1e2530'" />
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        <label style="color:#475569;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Contraseña</label>
+        <div style="position:relative;">
+          <input id="login-pass" type="password" placeholder="Tu contraseña"
+            style="background:#070a10;border:1px solid #1e2530;color:#e2e8f0;border-radius:8px;padding:11px 44px 11px 14px;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s;"
+            onkeydown="if(event.key==='Enter')doLogin()"
+            onfocus="this.style.borderColor='#22d3ee'" onblur="this.style.borderColor='#1e2530'" />
+          <button onclick="toggleLoginPass()" tabindex="-1"
+            style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#475569;font-size:16px;padding:2px;">
+            👁
+          </button>
+        </div>
+      </div>
+
+      <!-- Error msg -->
+      <div id="login-error" style="display:none;background:#1c0a0a;border:1px solid #f87171;border-radius:8px;padding:10px 14px;color:#f87171;font-size:13px;font-weight:600;text-align:center;">
+        ❌ Usuario o contraseña incorrectos
+      </div>
+
+      <button onclick="doLogin()" id="login-btn"
+        style="background:#22d3ee;color:#000;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:opacity 0.15s;letter-spacing:0.03em;margin-top:4px;">
+        Iniciar sesión →
+      </button>
+    </div>
+
+    <div style="color:#334155;font-size:11px;">Sistema de gestión de flota vehicular</div>
+  </div>
+</div>
+
+<style>
+@keyframes loginCanvasDots {
+  from { opacity:0.3; }
+  to   { opacity:0.3; }
+}
+</style>
+
 <!-- ── SPLASH SCREEN ── -->
 <div id="splash-screen" style="position:fixed;inset:0;background:#070a10;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:0;">
 
@@ -213,6 +285,84 @@
 <div id="toast-container"></div>
 
 <script>
+// ══════════════════════════════════════════════════════
+//  USUARIOS AUTORIZADOS — Edita aquí para agregar más
+//  Formato: { usuario: "...", password: "..." }
+// ══════════════════════════════════════════════════════
+const USUARIOS_PERMITIDOS = [
+  { usuario: "BMEXS1795",    password: "RESA950115"   },
+  { usuario: "H4017", password: "MAAD931215"  },
+  // ← Agrega más usuarios aquí siguiendo el mismo formato
+];
+// ══════════════════════════════════════════════════════
+
+function doLogin() {
+  const user = (document.getElementById("login-user")?.value || "").trim();
+  const pass  = document.getElementById("login-pass")?.value || "";
+  const errEl = document.getElementById("login-error");
+  const btn   = document.getElementById("login-btn");
+
+  const match = USUARIOS_PERMITIDOS.find(u => u.usuario === user && u.password === pass);
+
+  if (match) {
+    errEl.style.display = "none";
+    btn.textContent = "✅ Acceso concedido…";
+    btn.style.opacity = "0.7";
+    // Ocultar pantalla de login con animación
+    const loginScreen = document.getElementById("login-screen");
+    loginScreen.style.transition = "opacity 0.4s ease";
+    loginScreen.style.opacity = "0";
+    setTimeout(() => { loginScreen.remove(); init(); }, 420);
+  } else {
+    errEl.style.display = "block";
+    // Shake animation en el botón
+    btn.style.transform = "translateX(-6px)";
+    setTimeout(() => { btn.style.transform = "translateX(6px)"; }, 80);
+    setTimeout(() => { btn.style.transform = "translateX(-4px)"; }, 160);
+    setTimeout(() => { btn.style.transform = ""; }, 240);
+    document.getElementById("login-pass").value = "";
+    document.getElementById("login-pass").focus();
+  }
+}
+
+function toggleLoginPass() {
+  const input = document.getElementById("login-pass");
+  if (input) input.type = input.type === "password" ? "text" : "password";
+}
+
+// Partículas en el fondo del login
+(function initLoginCanvas() {
+  const canvas = document.getElementById("login-canvas");
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const dots = Array.from({length:40}, () => ({
+    x:  Math.random() * canvas.width,
+    y:  Math.random() * canvas.height,
+    r:  Math.random() * 1.4 + 0.4,
+    vx: (Math.random() - 0.5) * 0.3,
+    vy: (Math.random() - 0.5) * 0.3,
+    a:  Math.random() * 0.4 + 0.1
+  }));
+  function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    dots.forEach(d => {
+      d.x += d.vx; d.y += d.vy;
+      if (d.x < 0) d.x = canvas.width;
+      if (d.x > canvas.width) d.x = 0;
+      if (d.y < 0) d.y = canvas.height;
+      if (d.y > canvas.height) d.y = 0;
+      ctx.beginPath(); ctx.arc(d.x,d.y,d.r,0,Math.PI*2);
+      ctx.fillStyle = `rgba(34,211,238,${d.a})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ══════════════════════════════════════════════════════
+
 let vehicles = [];
 let _selectedStatus = null; // almacena el estatus elegido en el modal de edición
 
@@ -220,7 +370,7 @@ const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3BY1F4iFo-QeU
 const SHEET_URL       = "https://docs.google.com/spreadsheets/d/1mOTFHgkjFliZ5AX77SW-7aqZPgNbHSqBCClPd7dwEIY/edit?gid=674906336#gid=674906336";
 
 let sheetsConectado = true;
-
+BMEX
 async function apiGet(action, params = {}) {
   if (!sheetsConectado) return null;
   try {
@@ -2130,7 +2280,7 @@ function hideSplash() {
   setTimeout(() => splash.remove(), 560);
 }
 
-init();
+// init() ahora se llama desde doLogin() al autenticarse correctamente
 
 // ── AUTO-REFRESH cada 15 segundos ──
 setInterval(async () => {
