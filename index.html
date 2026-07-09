@@ -308,6 +308,7 @@ function doLogin() {
     errEl.style.display = "none";
     btn.textContent = "✅ Acceso concedido…";
     btn.style.opacity = "0.7";
+    try { localStorage.setItem("flotilla_session", JSON.stringify({ usuario: match.usuario, ts: Date.now() })); } catch(e) {}
     // Ocultar pantalla de login con animación
     const loginScreen = document.getElementById("login-screen");
     loginScreen.style.transition = "opacity 0.4s ease";
@@ -334,6 +335,27 @@ function toggleLoginPass() {
   const input = document.getElementById("login-pass");
   if (input) input.type = input.type === "password" ? "text" : "password";
 }
+
+function cerrarSesion() {
+  if (!confirm("¿Cerrar sesión?")) return;
+  try { localStorage.removeItem("flotilla_session"); } catch(e) {}
+  location.reload();
+}
+
+// Si ya existe una sesión guardada, saltar la pantalla de login al cargar/actualizar la página
+function verificarSesionGuardada() {
+  let sesion = null;
+  try { sesion = JSON.parse(localStorage.getItem("flotilla_session") || "null"); } catch(e) {}
+  const valido = sesion && USUARIOS_PERMITIDOS.some(u => u.usuario === sesion.usuario);
+  if (valido) {
+    const loginScreen = document.getElementById("login-screen");
+    if (loginScreen) loginScreen.remove();
+    const splash = document.getElementById("splash-screen");
+    if (splash) splash.style.display = "flex";
+    init();
+  }
+}
+window.addEventListener("DOMContentLoaded", verificarSesionGuardada);
 
 // Partículas en el fondo del login — se inicia cuando el DOM está listo
 function initLoginCanvas() {
@@ -459,6 +481,7 @@ function rowToVehicle(row, multas = [], mantos = []) {
     marca: s(row.Marca), submarca: s(row.Submarca),
     type: s(row.Tipo), fuelType: s(row.Combustible),
     driver: s(row.Conductor) || "Sin asignar",
+    driverFlotilla: s(row.ConductorFlotilla) || s(row.Conductor) || "Sin asignar",
     location: s(row.Ubicacion) || "—",
     usuario: s(row.Usuario) || "—",
     mileage: s(row.Kilometraje) || "0",
@@ -521,7 +544,7 @@ function vehicleToRow(v) {
   return {
     ECO: v.id, Placa: v.plate, Marca: v.marca, Submarca: v.submarca || "",
     Año: v.year, Tipo: v.type, Combustible: v.fuelType,
-    Conductor: v.driver, Ubicacion: v.location, Usuario: v.usuario || "", Kilometraje: v.mileage,
+    Conductor: v.driver, ConductorFlotilla: v.driverFlotilla || "", Ubicacion: v.location, Usuario: v.usuario || "", Kilometraje: v.mileage,
     Estatus: v.status, FechaAlta: v.fechaAlta || "",
     Motor: v.motor || "", Serie: v.serie || "", Color: v.color || "",
     EstadoOrigen: v.estado || "", Propietario: v.prop || "",
@@ -798,7 +821,8 @@ function openDetailModal(id) {
 
     ${secHeader("👤 Asignación Operativa")}
     <div class="grid-3">
-      ${row("Conductor Asignado", v.driver)}
+      ${row("Conductor del Día", v.driver)}
+      ${row("Asignación BD Flotilla", v.driverFlotilla)}
       ${row("Ubicación / Ruta", v.location)}
       ${row("Usuario Beta", v.usuario)}
       ${row("Zona", v.zona)}
@@ -1034,7 +1058,8 @@ function openNewModal() {
         <div class="field"><label>Tabulador</label><input id="nv-tabulador" type="text" placeholder="T1 / T2" /></div>
         <div class="field"><label>Combustible</label><select id="nv-fuel">${selectOpts(["Diesel","Gasolina","Híbrido","Eléctrico"])}</select></div>
         <div class="field"><label>Kilometraje Actual</label><input id="nv-mileage" type="text" placeholder="0 km" /></div>
-        <div class="field"><label>Conductor Asignado</label><input id="nv-driver" type="text" placeholder="Nombre del conductor" /></div>
+        <div class="field"><label>Conductor del Día</label><input id="nv-driver" type="text" placeholder="Nombre del conductor" /></div>
+        <div class="field"><label>Asignación BD Flotilla</label><input id="nv-driverFlotilla" type="text" placeholder="Nombre del conductor base" /></div>
         <div class="field"><label>Ubicación / Ruta</label><input id="nv-location" type="text" placeholder="Ruta Norte, Taller Central…" /></div>
         <div class="field"><label>Usuario Beta</label><input id="nv-usuario" type="text" placeholder="Ej. BMEXS0001" /></div>
         <div class="field"><label>Estatus Inicial</label><select id="nv-status">${selectOpts(["Operando","Mantenimiento","Siniestrada","Sin Uso","Uso Administrativo"])}</select></div>
@@ -1116,7 +1141,7 @@ function registerVehicle() {
     id: eco, plate, model: `${marca}${g("nv-submarca") ? " "+g("nv-submarca") : ""} ${year}`.trim(),
     year: parseInt(year), marca, submarca: g("nv-submarca"),
     type: g("nv-type")||"Otro", fuelType: g("nv-fuel")||"Gasolina",
-    driver: g("nv-driver")||"Sin asignar", location: g("nv-location")||"Base Central", usuario: g("nv-usuario")||"—",
+    driver: g("nv-driver")||"Sin asignar", driverFlotilla: g("nv-driverFlotilla")||g("nv-driver")||"Sin asignar", location: g("nv-location")||"Base Central", usuario: g("nv-usuario")||"—",
     mileage: g("nv-mileage")||"0 km", status: g("nv-status")||"Operando",
     fechaAlta: g("nv-fecha"), motor: g("nv-motor"), serie: g("nv-serie"),
     color: g("nv-color"), estado: g("nv-estado"), prop: g("nv-prop"),
@@ -1213,7 +1238,8 @@ function openEditModal(id) {
         <div class="field"><label>Facturado Por</label><input id="ev-facturado" type="text" value="${v.facturadoPor||""}" /></div>
         <div class="field"><label>Beneficiario</label><input id="ev-beneficiario" type="text" value="${v.beneficiario||""}" /></div>
         <div class="field"><label>Tabulador</label><input id="ev-tabulador" type="text" value="${v.tabulador||""}" /></div>
-        <div class="field"><label>Conductor</label><input id="ev-driver" type="text" value="${v.driver||""}" /></div>
+        <div class="field"><label>Conductor del Día</label><input id="ev-driver" type="text" value="${v.driver||""}" /></div>
+        <div class="field"><label>Asignación BD Flotilla</label><input id="ev-driverFlotilla" type="text" value="${v.driverFlotilla||""}" /></div>
         <div class="field"><label>Ubicación</label><input id="ev-location" type="text" value="${v.location||""}" /></div>
         <div class="field"><label>Usuario Beta</label><input id="ev-usuario" type="text" value="${v.usuario||""}" /></div>
         <div class="field"><label>Zona</label><input id="ev-zona" type="text" value="${v.zona||""}" /></div>
@@ -1313,6 +1339,7 @@ function saveEdit(id) {
   if (gv("ev-beneficiario")) v.beneficiario = gv("ev-beneficiario");
   if (gv("ev-tabulador"))    v.tabulador    = gv("ev-tabulador");
   if (gv("ev-driver"))       v.driver       = gv("ev-driver");
+  if (gv("ev-driverFlotilla")) v.driverFlotilla = gv("ev-driverFlotilla");
   if (gv("ev-location"))     v.location     = gv("ev-location");
   if (gv("ev-usuario"))      v.usuario      = gv("ev-usuario");
   if (gv("ev-zona"))         v.zona         = gv("ev-zona");
@@ -1972,6 +1999,7 @@ function render() {
         </div>
         ${window._SHEET_URL||(SHEET_URL&&SHEET_URL!=="PEGA_URL_DE_TU_GOOGLE_SHEET_AQUI")?`<button class="btn btn-ghost" onclick="window.open(window._SHEET_URL||'${SHEET_URL}','_blank')" style="border-color:rgba(74,222,128,0.3);color:#4ade80;">📊 Abrir Sheet</button>`:""}
         <button class="btn btn-ghost" onclick="toggleTheme()" id="theme-btn" style="padding:10px 12px;">${document.body.classList.contains("light")?"☀️":"🌙"}</button>
+        <button class="btn btn-ghost" onclick="cerrarSesion()" style="border-color:rgba(248,113,113,0.3);color:#f87171;">🔒 Cerrar sesión</button>
         <button class="btn btn-primary" onclick="openNewModal()">＋ Nuevo Vehículo</button>
       </div>
     </div>
@@ -2070,11 +2098,23 @@ function render() {
             </div>${badge(v.status)}
           </div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
-            ${[["👤 Conductor",v.driver],["🆔 Usuario Beta",v.usuario],["🛣 Kilometraje",v.mileage]].map(([lbl,val])=>`
+            ${[["👤 Conductor del Día",v.driver],["🆔 Usuario Beta",v.usuario],["🚚 Asignación BD Flotilla",v.driverFlotilla],["🛣 Kilometraje",v.mileage]].map(([lbl,val])=>`
               <div style="display:flex;justify-content:space-between;font-size:13px;">
                 <span style="color:var(--text3);">${lbl}</span>
                 <span style="color:var(--text);font-weight:500;font-family:'DM Mono',monospace;">${val}</span>
               </div>`).join("")}
+            ${(()=>{
+              const dDia = (v.driver||"").trim().toLowerCase();
+              const dFlotilla = (v.driverFlotilla||"").trim().toLowerCase();
+              if (!dDia || !dFlotilla || dDia === dFlotilla) return "";
+              return `<div style="display:flex;align-items:center;gap:8px;background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.35);border-radius:8px;padding:7px 10px;">
+                <span style="font-size:13px;">⚠️</span>
+                <div style="flex:1;">
+                  <div style="color:#facc15;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Conductor distinto al de Asignación BD Flotilla</div>
+                  <div style="color:#fde68a;font-size:11px;margin-top:1px;">Flotilla: <strong>${v.driverFlotilla}</strong> → Hoy: <strong>${v.driver}</strong></div>
+                </div>
+              </div>`;
+            })()}
             <div style="display:flex;justify-content:space-between;font-size:13px;">
               <span style="color:#475569;">📋 Verificación</span>
               <span style="color:${VERIF_COLOR[v.verificationStatus]||'#94a3b8'};font-weight:600;">${v.verificationStatus}</span>
