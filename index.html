@@ -36,6 +36,10 @@
     --card-border:#1a1f2e;
     --toast-ok-bg:#052e16;
     --toast-err-bg:#1c0a0a;
+    --warn-bg: rgba(250,204,21,0.1);
+    --warn-border: rgba(250,204,21,0.35);
+    --warn-title: #facc15;
+    --warn-text: #fde68a;
   }
 
   /* ── LIGHT MODE ── */
@@ -65,6 +69,10 @@
     --card-border:#dde3ec;
     --toast-ok-bg:#dcfce7;
     --toast-err-bg:#fee2e2;
+    --warn-bg: #fff3cd;
+    --warn-border: #e0ac08;
+    --warn-title: #7a5200;
+    --warn-text: #6b4a00;
   }
 
   body { background:var(--bg); color:var(--text); font-family:'DM Sans','Segoe UI',system-ui,sans-serif; min-height:100vh; transition:background 0.25s,color 0.25s; }
@@ -393,11 +401,14 @@ window.addEventListener("DOMContentLoaded", initLoginCanvas);
 
 let vehicles = [];
 let _selectedStatus = null; // almacena el estatus elegido en el modal de edición
+let currentDetailId = null; // _key del vehículo cuya ficha está abierta actualmente (o null)
 
 const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby3BY1F4iFo-QeULqJGNvOCuVznXZHfTlfsNN-Xwgfv-nHx04AvOeVUfhgZEtkv1ELpRw/exec";
 const SHEET_URL       = "https://docs.google.com/spreadsheets/d/1mOTFHgkjFliZ5AX77SW-7aqZPgNbHSqBCClPd7dwEIY/edit?gid=674906336#gid=674906336";
 
 let sheetsConectado = true;
+let pendingSaves = 0; // # de escrituras en curso (addMulta, addMantenimiento, saveVehiculo, etc.)
+let lastSaveCompletedAt = 0; // timestamp del último guardado exitoso, para dar margen antes de refrescar
 
 async function apiGet(action, params = {}) {
   if (!sheetsConectado) return null;
@@ -414,6 +425,7 @@ async function apiGet(action, params = {}) {
 
 async function apiPost(action, data = {}) {
   if (!sheetsConectado) return null;
+  pendingSaves++;
   try {
     const res = await fetch(APPS_SCRIPT_URL, {
       method: "POST",
@@ -424,6 +436,9 @@ async function apiPost(action, data = {}) {
     console.error("API POST error:", e);
     showToast("Error al guardar en Google Sheets", "error");
     return null;
+  } finally {
+    pendingSaves--;
+    lastSaveCompletedAt = Date.now();
   }
 }
 
@@ -455,10 +470,11 @@ async function cargarDatosDesdeSheets() {
       };
     });
 
-    vehicles = vData.map(row => {
-      const multas = (mData || []).filter(m => m.ECO === row.ECO);
-      const mantos = (mtData || []).filter(m => m.ECO === row.ECO);
-      const v = rowToVehicle(row, multas, mantos);
+    vehicles = vData.map((row, idx) => {
+      const rowEco = row["N° ECONÓMICO"] ?? row.ECO;
+      const multas = (mData || []).filter(m => m.ECO === rowEco);
+      const mantos = (mtData || []).filter(m => m.ECO === rowEco);
+      const v = rowToVehicle(row, multas, mantos, idx);
       // Inyectar resguardo desde hoja Resguardos
       if (resguardoMap[v.id]) v.resguardo = resguardoMap[v.id];
       return v;
@@ -467,15 +483,16 @@ async function cargarDatosDesdeSheets() {
     sheetsConectado = true;
     showToast(`✅ ${vehicles.length} vehículos cargados desde Google Sheets`);
     render();
+    refreshDetailIfOpen();
   } catch(e) {
     showToast("Error al cargar datos: " + e.message, "error");
   }
 }
 
-function rowToVehicle(row, multas = [], mantos = []) {
+function rowToVehicle(row, multas = [], mantos = [], idx = 0) {
   const s = (val) => (val !== undefined && val !== null) ? String(val).trim() : "";
   return {
-    id: s(row.ECO), plate: s(row.Placa),
+    id: s(row["N° ECONÓMICO"] ?? row.ECO), _key: (s(row["N° ECONÓMICO"] ?? row.ECO) || "SINECO") + "__" + idx, plate: s(row.Placa),
     model: (s(row.Marca) + (s(row.Submarca) ? " "+s(row.Submarca) : "") + " " + s(row.Año)).trim(),
     year: parseInt(row.Año) || 0,
     marca: s(row.Marca), submarca: s(row.Submarca),
@@ -542,7 +559,7 @@ function rowToVehicle(row, multas = [], mantos = []) {
 
 function vehicleToRow(v) {
   return {
-    ECO: v.id, Placa: v.plate, Marca: v.marca, Submarca: v.submarca || "",
+    "N° ECONÓMICO": v.id, Placa: v.plate, Marca: v.marca, Submarca: v.submarca || "",
     Año: v.year, Tipo: v.type, Combustible: v.fuelType,
     Conductor: v.driver, ConductorFlotilla: v.driverFlotilla || "", Ubicacion: v.location, Usuario: v.usuario || "", Kilometraje: v.mileage,
     Estatus: v.status, FechaAlta: v.fechaAlta || "",
@@ -643,9 +660,23 @@ function showToast(msg, type="success") {
 }
 function closeModal() {
   document.getElementById("modal-container").innerHTML = "";
+  currentDetailId = null;
 }
 function openModal(html) {
+  currentDetailId = null; // cualquier modal nuevo distinto a la ficha limpia el tracking
   document.getElementById("modal-container").innerHTML = html;
+}
+// Si la ficha (detalle) está abierta, la vuelve a pintar con los datos más recientes
+// preservando el scroll. Se llama después de cualquier cambio de datos (multas, mantenimiento, auto-refresh).
+function refreshDetailIfOpen() {
+  if (!currentDetailId) return;
+  if (!vehicles.find(v => v._key === currentDetailId)) { currentDetailId = null; return; }
+  const bodyEl = document.querySelector(".modal-box .modal-body");
+  const scrollTop = bodyEl ? bodyEl.scrollTop : 0;
+  const idToRestore = currentDetailId;
+  openDetailModal(idToRestore);
+  const newBodyEl = document.querySelector(".modal-box .modal-body");
+  if (newBodyEl) newBodyEl.scrollTop = scrollTop;
 }
 function buildModal(title, subtitle, bodyHtml, footerHtml) {
   return `
@@ -687,6 +718,23 @@ function totalGlobalMaintenance() {
 }
 function fmtMoney(n) {
   return "$" + n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ── FOLIOS SECUENCIALES: MANT0001, MULT0001… ──
+function nextFolio(prefix, collectFn) {
+  let max = 0;
+  const re = new RegExp("^" + prefix + "(\\d+)$");
+  vehicles.forEach(v => collectFn(v).forEach(idVal => {
+    const m = re.exec(String(idVal || "").trim());
+    if (m) max = Math.max(max, parseInt(m[1], 10));
+  }));
+  return prefix + String(max + 1).padStart(4, "0");
+}
+function nextMantId() {
+  return nextFolio("MANT", v => (v.maintenanceHistory || []).map(h => h.mant_id));
+}
+function nextMultId() {
+  return nextFolio("MULT", v => (v.fines || []).map(f => f.multa_id));
 }
 
 // ══════════════════════════════════════════════════════
@@ -776,7 +824,7 @@ function renderAlertsBlock(v) {
 
 // ─── DETAIL MODAL ───
 function openDetailModal(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
 
   const finesList = v.fines || [];
@@ -791,6 +839,14 @@ function openDetailModal(id) {
   const secHeader = (txt) => `<div style="color:#22d3ee;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);">${txt}</div>`;
 
   const body = `
+    <!-- PLACA GRANDE -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:20px;flex-wrap:wrap;">
+      <div style="background:linear-gradient(180deg,#ffffff,#e7ecf2);border:3px solid #0f172a;border-radius:10px;padding:10px 28px;box-shadow:0 4px 14px rgba(0,0,0,0.35);">
+        <div style="color:#0f172a;font-size:34px;font-weight:800;letter-spacing:0.08em;font-family:'DM Mono',monospace;line-height:1;">${v.plate || "SIN PLACA"}</div>
+      </div>
+      <div style="color:var(--text3);font-size:13px;font-weight:700;letter-spacing:.04em;">🚛 ${v.id}</div>
+    </div>
+
     <!-- ESTATUS RESUMEN -->
     <div class="grid-3" style="margin-bottom:4px;">
       <div class="info-block"><div class="lbl">Estatus</div>${badge(v.status)}</div>
@@ -966,16 +1022,17 @@ function openDetailModal(id) {
   `;
 
   const footer = `
-    <button class="btn btn-ghost" style="border-color:rgba(34,211,238,0.3);color:#22d3ee;" onclick="closeModal();openQRModal('${v.id}')">📋 Ver / Generar QR</button>
+    <button class="btn btn-ghost" style="border-color:rgba(34,211,238,0.3);color:#22d3ee;" onclick="closeModal();openQRModal('${v._key}')">📋 Ver / Generar QR</button>
 
     <button class="btn btn-ghost" onclick="closeModal()">Cerrar</button>
   `;
 
   openModal(buildModal(`${v.id} · ${v.plate}`, `${v.model} · ${v.type} · ${v.year}`, body, footer));
+  currentDetailId = id;
 }
 
 function addFine(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const motivo    = document.getElementById(`fine-motivo-${id}`)?.value?.trim();
   const costoRaw  = document.getElementById(`fine-costo-${id}`)?.value?.trim();
@@ -986,7 +1043,7 @@ function addFine(id) {
     showToast("Ingresa un costo válido mayor a cero", "error"); return;
   }
   if (!v.fines) v.fines = [];
-  const multaId = "MUL-" + Date.now();
+  const multaId = nextMultId();
   const fineObj = {
     multa_id: multaId,
     motivo,
@@ -996,7 +1053,7 @@ function addFine(id) {
   };
   v.fines.push(fineObj);
   if (sheetsConectado) {
-    const multaRow = { ID: multaId, ECO: id, Placa: v.plate || "", Motivo: fineObj.motivo, Costo: fineObj.cost, Fecha: fineObj.fecha, Evidencia: fineObj.evidencia, Registrado: "Admin" };
+    const multaRow = { ID: multaId, ECO: v.id, Placa: v.plate || "", Motivo: fineObj.motivo, Costo: fineObj.cost, Fecha: fineObj.fecha, Evidencia: fineObj.evidencia, Registrado: "Admin" };
     apiPost("addMulta", { data: multaRow }).then(res => { if (res && res.ok) showToast(`✅ Multa guardada en Google Sheets`); });
   }
   showToast(`Multa registrada: ${fmtMoney(parseFloat(costoRaw))}`);
@@ -1005,7 +1062,7 @@ function addFine(id) {
 }
 
 function removeFine(id, idx) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v || !v.fines) return;
   const removed = v.fines.splice(idx, 1);
   if (sheetsConectado && removed[0]?.multa_id) {
@@ -1138,7 +1195,7 @@ function registerVehicle() {
   if (vehicles.find(v => v.id === eco)) { showToast("Ya existe un vehículo con ese N° Económico", "error"); return; }
 
   const newV = {
-    id: eco, plate, model: `${marca}${g("nv-submarca") ? " "+g("nv-submarca") : ""} ${year}`.trim(),
+    id: eco, _key: eco, plate, model: `${marca}${g("nv-submarca") ? " "+g("nv-submarca") : ""} ${year}`.trim(),
     year: parseInt(year), marca, submarca: g("nv-submarca"),
     type: g("nv-type")||"Otro", fuelType: g("nv-fuel")||"Gasolina",
     driver: g("nv-driver")||"Sin asignar", driverFlotilla: g("nv-driverFlotilla")||g("nv-driver")||"Sin asignar", location: g("nv-location")||"Base Central", usuario: g("nv-usuario")||"—",
@@ -1207,7 +1264,7 @@ function evSelectStatus(s) {
 }
 
 function openEditModal(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
 
   const tabBar = `
@@ -1318,7 +1375,7 @@ function openEditModal(id) {
 }
 
 function saveEdit(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const gv = (eid) => document.getElementById(eid)?.value?.trim() || "";
   if (gv("ev-fecha"))        v.fechaAlta    = gv("ev-fecha");
@@ -1384,7 +1441,7 @@ function saveEdit(id) {
 }
 
 function openMaintenanceModal(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   const hasPending = v.nextMaintenance && getDaysUntil(v.nextMaintenance) <= 30;
   const pendingBlock = hasPending ? `
     <div style="background:rgba(250,204,21,0.07);border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:16px;margin-bottom:4px;">
@@ -1413,12 +1470,12 @@ function openMaintenanceModal(id) {
     </div>`;
   openModal(buildModal("Mantenimiento", `${v.id} · ${v.plate}`, body,
     `<button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
-     <button class="btn btn-ghost" style="border-color:rgba(74,222,128,0.4);color:#4ade80;" onclick="agendarMantenimiento('${v.id}', false)">💾 Guardar sin programar</button>
-     <button class="btn btn-primary" onclick="agendarMantenimiento('${v.id}', true)">📅 Agendar con fecha</button>`));
+     <button class="btn btn-ghost" style="border-color:rgba(74,222,128,0.4);color:#4ade80;" onclick="agendarMantenimiento('${v._key}', false)">💾 Guardar sin programar</button>
+     <button class="btn btn-primary" onclick="agendarMantenimiento('${v._key}', true)">📅 Agendar con fecha</button>`));
 }
 
 function marcarMantenimientoRealizado(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   closeModal();
   // Pedir el costo real antes de registrar
@@ -1439,14 +1496,16 @@ function marcarMantenimientoRealizado(id) {
 }
 
 function confirmarMantenimientoRealizado(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const costoRaw = document.getElementById("mant-real-costo-"+id)?.value?.trim() || "0";
   const costo = parseFloat(costoRaw.replace(/[^0-9.]/g,"")) || 0;
   const tipo   = document.getElementById("mant-real-tipo-"+id)?.value   || "Servicio Programado";
   const taller = document.getElementById("mant-real-taller-"+id)?.value?.trim() || "";
   const desc   = document.getElementById("mant-real-desc-"+id)?.value?.trim()   || ("Mantenimiento realizado · " + fmtDate(v.nextMaintenance));
+  const mantId = nextMantId();
   const mantObj = {
+    mant_id: mantId,
     type: tipo,
     description: desc,
     cost: costo,
@@ -1458,7 +1517,7 @@ function confirmarMantenimientoRealizado(id) {
   v.lastMaintenance = mantObj.date;
   v.nextMaintenance = new Date(Date.now() + 90*24*60*60*1000).toISOString().split("T")[0];
   if (sheetsConectado) {
-    const mantRow = { ID:"MNT-"+Date.now(), ECO:id, Placa: v.plate || "", Tipo:mantObj.type, Descripcion:mantObj.description, Costo:costo.toString(), Fecha:mantObj.date, Taller:taller };
+    const mantRow = { ID:mantId, ECO:v.id, Placa: v.plate || "", Tipo:mantObj.type, Descripcion:mantObj.description, Costo:costo.toString(), Fecha:mantObj.date, Taller:taller };
     showLoadingOverlay("Guardando mantenimiento…");
     Promise.all([apiPost("addMantenimiento",{data:mantRow}), apiPost("saveVehiculo",{data:vehicleToRow(v)})]).then(()=>{ hideLoadingOverlay(); });
   }
@@ -1469,7 +1528,7 @@ function confirmarMantenimientoRealizado(id) {
 
 function reagendarMantenimiento(id) {
   closeModal();
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   const body = `
     <div style="display:flex;flex-direction:column;gap:16px;">
       <div style="color:#facc15;font-size:13px;">Selecciona la nueva fecha para el mantenimiento de <strong>${v.id} · ${v.plate}</strong></div>
@@ -1482,7 +1541,7 @@ function reagendarMantenimiento(id) {
 }
 
 function confirmarReagenda(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   const fecha = document.getElementById("reagenda-fecha")?.value;
   if (!fecha) { showToast("Selecciona una fecha", "error"); return; }
   v.nextMaintenance = fecha;
@@ -1495,7 +1554,7 @@ function confirmarReagenda(id) {
 }
 
 function agendarMantenimiento(id, programar) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const tipo   = document.getElementById("mant-tipo-"+id)?.value || "Servicio Menor";
   const fecha  = document.getElementById("mant-fecha-"+id)?.value || "";
@@ -1507,7 +1566,8 @@ function agendarMantenimiento(id, programar) {
   // Si eligió "Agendar con fecha", la fecha es obligatoria
   if (programar && !fecha) { showToast("Selecciona una fecha para agendar", "error"); return; }
 
-  const mantObj = { type: tipo, description: desc, cost: costo, date: fecha || new Date().toISOString().split("T")[0], taller };
+  const mantId = nextMantId();
+  const mantObj = { mant_id: mantId, type: tipo, description: desc, cost: costo, date: fecha || new Date().toISOString().split("T")[0], taller };
   if (!v.maintenanceHistory) v.maintenanceHistory = [];
   v.maintenanceHistory.push(mantObj);
 
@@ -1517,7 +1577,7 @@ function agendarMantenimiento(id, programar) {
   }
 
   if (sheetsConectado) {
-    const mantRow = { ID:"MNT-"+Date.now(), ECO:id, Placa: v.plate || "", Tipo:tipo, Descripcion:desc, Costo:costo.toString(), Fecha:mantObj.date, Taller:taller };
+    const mantRow = { ID:mantId, ECO:v.id, Placa: v.plate || "", Tipo:tipo, Descripcion:desc, Costo:costo.toString(), Fecha:mantObj.date, Taller:taller };
     showLoadingOverlay("Guardando mantenimiento…");
     Promise.all([apiPost("addMantenimiento",{data:mantRow}), apiPost("saveVehiculo",{data:vehicleToRow(v)})]).then(([r1])=>{
       hideLoadingOverlay();
@@ -1531,7 +1591,7 @@ function agendarMantenimiento(id, programar) {
 
 // ── RESGUARDO ──
 async function openResguardoModal(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const r = v.resguardo || {};
 
@@ -1649,7 +1709,7 @@ async function openResguardoModal(id) {
 }
 
 function saveResguardo(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const gv = (eid) => document.getElementById(eid)?.value?.trim() || "";
   if (!v.resguardo) v.resguardo = {};
@@ -1685,7 +1745,7 @@ function saveResguardo(id) {
 }
 
 function openFinesModal(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const finesList = v.fines || [];
   const totalFines = totalFinesCost(v);
@@ -1725,7 +1785,7 @@ function openFinesModal(id) {
 }
 
 function addFineFromModal(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const motivo    = document.getElementById("fine-motivo-"+id)?.value?.trim();
   const costoRaw  = document.getElementById("fine-costo-"+id)?.value?.trim();
@@ -1734,11 +1794,11 @@ function addFineFromModal(id) {
   if (!motivo) { showToast("Escribe el motivo", "error"); return; }
   if (!costoRaw || parseFloat(costoRaw) <= 0) { showToast("Ingresa un costo válido", "error"); return; }
   if (!v.fines) v.fines = [];
-  const multaId = "MUL-" + Date.now();
+  const multaId = nextMultId();
   const fineObj = { multa_id: multaId, motivo, cost: parseFloat(costoRaw), fecha: fecha ? fmtDate(fecha) : new Date().toLocaleDateString("es-MX"), evidencia: evidencia || "" };
   v.fines.push(fineObj);
   if (sheetsConectado) {
-    const multaRow = { ID: multaId, ECO:id, Placa: v.plate || "", Motivo:fineObj.motivo, Costo:fineObj.cost, Fecha:fineObj.fecha, Evidencia:fineObj.evidencia };
+    const multaRow = { ID: multaId, ECO:v.id, Placa: v.plate || "", Motivo:fineObj.motivo, Costo:fineObj.cost, Fecha:fineObj.fecha, Evidencia:fineObj.evidencia };
     apiPost("addMulta", { data: multaRow }).then(()=>{});
   }
   showToast("Multa registrada: " + fmtMoney(parseFloat(costoRaw)));
@@ -1747,7 +1807,7 @@ function addFineFromModal(id) {
 }
 
 function removeFineFromModal(id, idx) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v || !v.fines) return;
   const removed = v.fines.splice(idx, 1);
   if (sheetsConectado && removed[0]?.multa_id) {
@@ -1767,7 +1827,7 @@ function buildQRText(v) {
 }
 
 function openQRModal(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v) return;
   const alreadyGenerated = !!v.qrGenerated;
   const tcLink = v.links?.tc||"", polLink = v.links?.polizaDigital||"";
@@ -1823,7 +1883,7 @@ function openQRModal(id) {
 }
 
 function generarQR(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   if (!v || v.qrGenerated) { showToast("Este vehículo ya tiene un QR", "error"); return; }
   const text = buildQRText(v);
   if (!text.trim()) { showToast("Sin datos para generar QR", "error"); return; }
@@ -1836,7 +1896,7 @@ function generarQR(id) {
 }
 
 function descargarQR(id) {
-  const v = vehicles.find(x => x.id === id);
+  const v = vehicles.find(x => x._key === id);
   const nombre = v ? (v.plate||v.id) : id;
   let canvas, img;
   for (const sel of [`#qr-canvas-${id}`,`#qr-render-${id}`]) {
@@ -1875,7 +1935,7 @@ function openNotificationsModal() {
               <span>${a.icon}</span><span style="color:var(--text2);min-width:160px;">${a.label}</span>
               <span style="color:${a.color};font-weight:600;">${a.text}</span></div>`).join("")}
           </div>
-          <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;" onclick="closeModal();openDetailModal('${v.id}')">Ver detalles →</button>
+          <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;" onclick="closeModal();openDetailModal('${v._key}')">Ver detalles →</button>
         </div>`;
       }).join("");
   }
@@ -1931,7 +1991,7 @@ function openOtrosModal() {
                     <div style="color:var(--text2);font-size:13px;font-weight:600;">${v.model}</div>
                     <div style="color:#475569;font-size:12px;margin-top:2px;">👤 ${v.driver} · 📍 ${v.location} · 🚛 ${v.type||"—"}</div>
                   </div>
-                  <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;border-color:rgba(34,211,238,0.3);color:#22d3ee;" onclick="closeModal();openDetailModal('${v.id}')">Ver detalles →</button>
+                  <button class="btn btn-ghost" style="font-size:12px;padding:6px 14px;border-color:rgba(34,211,238,0.3);color:#22d3ee;" onclick="closeModal();openDetailModal('${v._key}')">Ver detalles →</button>
                 </div>`).join('')}
             </div>
           </div>`;
@@ -2094,7 +2154,8 @@ function render() {
             <div>
               <div style="color:#22d3ee;font-size:13px;font-family:'DM Mono',monospace;font-weight:500;margin-bottom:2px;">${v.id}</div>
               <div style="color:var(--text);font-size:17px;font-weight:700;letter-spacing:-0.02em;">${v.model}</div>
-              <div style="color:var(--text3);font-size:12px;margin-top:2px;">${v.plate} · ${v.type}</div>
+              <div style="color:var(--text);font-size:20px;font-weight:800;letter-spacing:0.06em;font-family:'DM Mono',monospace;margin-top:4px;">${v.plate}</div>
+              <div style="color:var(--text3);font-size:12px;margin-top:2px;">${v.type}</div>
             </div>${badge(v.status)}
           </div>
           <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
@@ -2107,11 +2168,11 @@ function render() {
               const dDia = (v.driver||"").trim().toLowerCase();
               const dFlotilla = (v.driverFlotilla||"").trim().toLowerCase();
               if (!dDia || !dFlotilla || dDia === dFlotilla) return "";
-              return `<div style="display:flex;align-items:center;gap:8px;background:rgba(250,204,21,0.1);border:1px solid rgba(250,204,21,0.35);border-radius:8px;padding:7px 10px;">
+              return `<div style="display:flex;align-items:center;gap:8px;background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;padding:7px 10px;">
                 <span style="font-size:13px;">⚠️</span>
                 <div style="flex:1;">
-                  <div style="color:#facc15;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Conductor distinto al de Asignación BD Flotilla</div>
-                  <div style="color:#fde68a;font-size:11px;margin-top:1px;">Flotilla: <strong>${v.driverFlotilla}</strong> → Hoy: <strong>${v.driver}</strong></div>
+                  <div style="color:var(--warn-title);font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Conductor distinto al de Asignación BD Flotilla</div>
+                  <div style="color:var(--warn-text);font-size:11px;margin-top:1px;">Flotilla: <strong>${v.driverFlotilla}</strong> → Hoy: <strong>${v.driver}</strong></div>
                 </div>
               </div>`;
             })()}
@@ -2125,7 +2186,7 @@ function render() {
               const conductorActual = v.driver || "";
               if (!conductorResguardo || !conductorActual || conductorActual === "Sin asignar") return "";
               if (conductorResguardo.trim().toLowerCase() === conductorActual.trim().toLowerCase()) return "";
-              return `<div onclick="openResguardoModal('${v.id}')" style="display:flex;align-items:center;gap:8px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.35);border-radius:8px;padding:7px 10px;cursor:pointer;transition:background 0.2s;" title="Haz clic para actualizar el resguardo">
+              return `<div onclick="openResguardoModal('${v._key}')" style="display:flex;align-items:center;gap:8px;background:rgba(96,165,250,0.1);border:1px solid rgba(96,165,250,0.35);border-radius:8px;padding:7px 10px;cursor:pointer;transition:background 0.2s;" title="Haz clic para actualizar el resguardo">
                 <span style="font-size:13px;">🔄</span>
                 <div style="flex:1;">
                   <div style="color:#60a5fa;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;">Cambio de operador</div>
@@ -2156,12 +2217,12 @@ function render() {
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr 1fr;gap:8px;">
-            <button class="btn btn-primary btn-sm" onclick="openDetailModal('${v.id}')">👁 Ver</button>
-            <button class="btn btn-ghost btn-sm" onclick="openEditModal('${v.id}')" style="border-color:rgba(168,85,247,0.3);color:#c084fc;">✏️ Editar</button>
-            <button class="btn btn-ghost btn-sm" onclick="openMaintenanceModal('${v.id}')" style="border-color:rgba(96,165,250,0.3);color:#60a5fa;">🔧 Mant.</button>
-            <button class="btn btn-ghost btn-sm" onclick="openResguardoModal('${v.id}')" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">🏠 Resg.</button>
-            <button class="btn btn-ghost btn-sm" onclick="openFinesModal('${v.id}')" style="border-color:rgba(248,113,113,0.3);color:#f87171;">🚨 Multas</button>
-            <button class="btn btn-ghost btn-sm" onclick="openQRModal('${v.id}')" style="border-color:rgba(34,211,238,0.3);color:#22d3ee;">📋 QR</button>
+            <button class="btn btn-primary btn-sm" onclick="openDetailModal('${v._key}')">👁 Ver</button>
+            <button class="btn btn-ghost btn-sm" onclick="openEditModal('${v._key}')" style="border-color:rgba(168,85,247,0.3);color:#c084fc;">✏️ Editar</button>
+            <button class="btn btn-ghost btn-sm" onclick="openMaintenanceModal('${v._key}')" style="border-color:rgba(96,165,250,0.3);color:#60a5fa;">🔧 Mant.</button>
+            <button class="btn btn-ghost btn-sm" onclick="openResguardoModal('${v._key}')" style="border-color:rgba(251,191,36,0.3);color:#fbbf24;">🏠 Resg.</button>
+            <button class="btn btn-ghost btn-sm" onclick="openFinesModal('${v._key}')" style="border-color:rgba(248,113,113,0.3);color:#f87171;">🚨 Multas</button>
+            <button class="btn btn-ghost btn-sm" onclick="openQRModal('${v._key}')" style="border-color:rgba(34,211,238,0.3);color:#22d3ee;">📋 QR</button>
           </div>
         </div>`;
       }).join("")}
@@ -2331,6 +2392,7 @@ function hideSplash() {
 // ── AUTO-REFRESH cada 15 segundos ──
 setInterval(async () => {
   if (!sheetsConectado) return;
+  if (pendingSaves > 0 || (Date.now() - lastSaveCompletedAt) < 3000) return; // hay un guardado en curso o muy reciente: no pisar los datos locales todavía
   try {
     const [vData, mData, mtData, rData] = await Promise.all([
       apiGet("getFlotilla"),
@@ -2344,14 +2406,16 @@ setInterval(async () => {
       const s = (v) => (v !== undefined && v !== null) ? String(v).trim() : "";
       resguardoMap[s(r.ECO)] = { direccion:s(r.Direccion), licencia:s(r.Licencia), domicilio:s(r.Domicilio), fachada:s(r.Fachada), gps:s(r.GPS), conductor:s(r.Operador) };
     });
-    vehicles = vData.map(row => {
-      const multas = (mData || []).filter(m => m.ECO === row.ECO);
-      const mantos = (mtData || []).filter(m => m.ECO === row.ECO);
-      const v = rowToVehicle(row, multas, mantos);
+    vehicles = vData.map((row, idx) => {
+      const rowEco = row["N° ECONÓMICO"] ?? row.ECO;
+      const multas = (mData || []).filter(m => m.ECO === rowEco);
+      const mantos = (mtData || []).filter(m => m.ECO === rowEco);
+      const v = rowToVehicle(row, multas, mantos, idx);
       if (resguardoMap[v.id]) v.resguardo = resguardoMap[v.id];
       return v;
     });
     render();
+    refreshDetailIfOpen();
   } catch(e) { console.warn("Auto-refresh error:", e); }
 }, 10000);
 </script>
