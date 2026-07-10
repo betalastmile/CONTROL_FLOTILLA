@@ -86,10 +86,15 @@
   /* ── INPUTS ── */
   input::placeholder, textarea::placeholder { color:var(--input-ph); }
   select option { background:var(--select-opt); color:var(--input-color); }
-  input[type=text], input[type=number], input[type=date], input[type=file], select, textarea {
+  input[type=text], input[type=number], input[type=date], input[type=file], input[type=password], select, textarea {
     background:var(--input-bg); border:1px solid var(--border2); color:var(--input-color);
-    border-radius:8px; padding:10px 14px; font-size:14px; outline:none;
+    border-radius:8px; padding:10px 14px; font-size:16px; outline:none;
     font-family:inherit; width:100%; transition:border-color 0.2s;
+  }
+  @media (min-width:768px) {
+    input[type=text], input[type=number], input[type=date], input[type=file], input[type=password], select, textarea {
+      font-size:14px;
+    }
   }
   input:focus, select:focus, textarea:focus { border-color:#22d3ee; }
   textarea { resize:vertical; }
@@ -195,7 +200,7 @@
       <div style="display:flex;flex-direction:column;gap:6px;">
         <label style="color:#475569;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Usuario</label>
         <input id="login-user" type="text" placeholder="Tu usuario"
-          style="background:#070a10;border:1px solid #1e2530;color:#e2e8f0;border-radius:8px;padding:11px 14px;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s;"
+          style="background:#070a10;border:1px solid #1e2530;color:#e2e8f0;border-radius:8px;padding:11px 14px;font-size:16px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s;"
           onkeydown="if(event.key==='Enter')document.getElementById('login-pass').focus()"
           onfocus="this.style.borderColor='#22d3ee'" onblur="this.style.borderColor='#1e2530'" />
       </div>
@@ -204,7 +209,7 @@
         <label style="color:#475569;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Contraseña</label>
         <div style="position:relative;">
           <input id="login-pass" type="password" placeholder="Tu contraseña"
-            style="background:#070a10;border:1px solid #1e2530;color:#e2e8f0;border-radius:8px;padding:11px 44px 11px 14px;font-size:14px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s;"
+            style="background:#070a10;border:1px solid #1e2530;color:#e2e8f0;border-radius:8px;padding:11px 44px 11px 14px;font-size:16px;outline:none;font-family:inherit;width:100%;transition:border-color 0.2s;"
             onkeydown="if(event.key==='Enter')doLogin()"
             onfocus="this.style.borderColor='#22d3ee'" onblur="this.style.borderColor='#1e2530'" />
           <button onclick="toggleLoginPass()" tabindex="-1"
@@ -300,7 +305,9 @@
 const USUARIOS_PERMITIDOS = [
   { usuario: "BMEXS1795",    password: "RESA950115"   },
   { usuario: "BMEXH4017", password: "MAAD931215"  },
-  // ← Agrega más usuarios aquí siguiendo el mismo formato
+  { usuario: "BEAIS12331", password: "PEHR620608"  },
+  { usuario: "BMEXS5735", password: "VADM851114"  },
+  { usuario: "ERNESTO", password: "BETA"  },
 ];
 // ══════════════════════════════════════════════════════
 
@@ -636,6 +643,7 @@ const VERIF_COLOR = { "Vigente":"#4ade80", "Próximo a Vencer":"#facc15", "Venci
 
 let searchTerm = "";
 let filterStatus = "all";
+let filterSpecial = null; // "fines" | "maint" | null
 
 function getDaysUntil(dateStr) {
   return Math.ceil((new Date(dateStr) - new Date()) / (1000 * 60 * 60 * 24));
@@ -2038,7 +2046,9 @@ function render() {
     const s = searchTerm.toLowerCase();
     const matchSearch = (v.id.toLowerCase().includes(s)||v.plate.toLowerCase().includes(s)||(v.driver||"").toLowerCase().includes(s));
     let matchFilter = true;
-    if (filterStatus !== "all") matchFilter = v.status === filterStatus;
+    if (filterSpecial === "fines") matchFilter = (v.fines||[]).length > 0;
+    else if (filterSpecial === "maint") matchFilter = (v.maintenanceHistory||[]).length > 0;
+    else if (filterStatus !== "all") matchFilter = v.status === filterStatus;
     return matchSearch && matchFilter;
   });
 
@@ -2066,10 +2076,10 @@ function render() {
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:14px;">
       ${[["Total Flota","🚛",vehicles.length,"#22d3ee","all"],["Operando","✅",counts.op,"#4ade80","Operando"],["En Mantenimiento","🔧",counts.mant,"#facc15","Mantenimiento"],["Siniestradas","🚨",counts.sin,"#f87171","Siniestrada"],["Sin Uso","⏸️",counts.nouse,"#94a3b8","Sin Uso"],["Uso Administrativo","🏢",counts.admin,"#a78bfa","Uso Administrativo"]].map(([lbl,icon,val,color,filtro])=>`
-        <div onclick="filterStatus='${filtro}';render()" class="card-hover" style="background:${filterStatus===filtro?color+'18':'var(--card-bg)'};border:1px solid ${filterStatus===filtro?color+'80':'var(--card-border)'};border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s;${filterStatus===filtro?'box-shadow:0 0 20px '+color+'30;':''}">
+        <div onclick="filterStatus='${filtro}';filterSpecial=null;render()" class="card-hover" style="background:${filterStatus===filtro&&!filterSpecial?color+'18':'var(--card-bg)'};border:1px solid ${filterStatus===filtro&&!filterSpecial?color+'80':'var(--card-border)'};border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s;${filterStatus===filtro&&!filterSpecial?'box-shadow:0 0 20px '+color+'30;':''}">
           <div style="width:44px;height:44px;border-radius:10px;background:${color}25;border:1px solid ${color}40;display:flex;align-items:center;justify-content:center;font-size:20px;">${icon}</div>
           <div><div style="color:var(--text3);font-size:12px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:4px;">${lbl}</div>
-          <div style="color:${filterStatus===filtro?color:'var(--text)'};font-size:26px;font-weight:800;letter-spacing:-0.03em;">${val}</div></div>
+          <div style="color:${filterStatus===filtro&&!filterSpecial?color:'var(--text)'};font-size:26px;font-weight:800;letter-spacing:-0.03em;">${val}</div></div>
         </div>`).join("")}
       <div onclick="openOtrosModal()" class="card-hover" style="background:${counts.otros>0?'rgba(251,146,60,0.10)':'var(--card-bg)'};border:1px solid ${counts.otros>0?'rgba(251,146,60,0.4)':'var(--card-border)'};border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px;cursor:pointer;transition:all 0.2s;">
         <div style="width:44px;height:44px;border-radius:10px;background:rgba(251,146,60,0.18);border:1px solid rgba(251,146,60,0.35);display:flex;align-items:center;justify-content:center;font-size:20px;">📦</div>
@@ -2081,23 +2091,28 @@ function render() {
     </div>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
-      <div style="background:var(--card-bg);border:1px solid rgba(248,113,113,0.3);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:18px;">
+      <div onclick="filterSpecial=(filterSpecial==='fines'?null:'fines');filterStatus='all';render()" class="card-hover" style="cursor:pointer;background:${filterSpecial==='fines'?'rgba(248,113,113,0.15)':'var(--card-bg)'};border:1px solid ${filterSpecial==='fines'?'#f87171':'rgba(248,113,113,0.3)'};border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:18px;transition:all 0.2s;${filterSpecial==='fines'?'box-shadow:0 0 20px rgba(248,113,113,0.25);':''}">
         <div style="width:48px;height:48px;border-radius:10px;background:rgba(248,113,113,0.12);border:1px solid rgba(248,113,113,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🚨</div>
         <div style="flex:1;">
-          <div style="color:var(--text3);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Total Multas &amp; Gastos · Flota</div>
+          <div style="color:var(--text3);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Total Multas &amp; Gastos · Flota ${filterSpecial==='fines'?'· <span style=\"color:#f87171;\">Filtrando</span>':''}</div>
           <div style="color:${globalFines>0?'#f87171':'#4ade80'};font-size:28px;font-weight:800;letter-spacing:-0.03em;font-family:'DM Mono',monospace;">${fmtMoney(globalFines)}</div>
-          <div style="color:var(--text3);font-size:12px;margin-top:4px;">${vehicles.filter(v=>(v.fines||[]).length>0).length} unidad(es) con registros</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:4px;">${vehicles.filter(v=>(v.fines||[]).length>0).length} unidad(es) con registros · toca para filtrar</div>
         </div>
       </div>
-      <div style="background:var(--card-bg);border:1px solid rgba(250,204,21,0.3);border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:18px;">
+      <div onclick="filterSpecial=(filterSpecial==='maint'?null:'maint');filterStatus='all';render()" class="card-hover" style="cursor:pointer;background:${filterSpecial==='maint'?'rgba(250,204,21,0.15)':'var(--card-bg)'};border:1px solid ${filterSpecial==='maint'?'#facc15':'rgba(250,204,21,0.3)'};border-radius:12px;padding:20px 24px;display:flex;align-items:center;gap:18px;transition:all 0.2s;${filterSpecial==='maint'?'box-shadow:0 0 20px rgba(250,204,21,0.25);':''}">
         <div style="width:48px;height:48px;border-radius:10px;background:rgba(250,204,21,0.12);border:1px solid rgba(250,204,21,0.25);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔧</div>
         <div style="flex:1;">
-          <div style="color:var(--text3);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Total Gasto Mantenimiento · Flota</div>
+          <div style="color:var(--text3);font-size:12px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;">Total Gasto Mantenimiento · Flota ${filterSpecial==='maint'?'· <span style=\"color:#facc15;\">Filtrando</span>':''}</div>
           <div style="color:${totalGlobalMaintenance()>0?'#facc15':'#4ade80'};font-size:28px;font-weight:800;letter-spacing:-0.03em;font-family:'DM Mono',monospace;">${fmtMoney(totalGlobalMaintenance())}</div>
-          <div style="color:var(--text3);font-size:12px;margin-top:4px;">${vehicles.reduce((a,v)=>a+(v.maintenanceHistory||[]).length,0)} servicio(s) registrado(s)</div>
+          <div style="color:var(--text3);font-size:12px;margin-top:4px;">${vehicles.reduce((a,v)=>a+(v.maintenanceHistory||[]).length,0)} servicio(s) registrado(s) · toca para filtrar</div>
         </div>
       </div>
     </div>
+    ${filterSpecial?`
+    <div style="display:flex;align-items:center;gap:10px;margin:-20px 0 20px;">
+      <span style="color:var(--text3);font-size:12px;">Filtro activo: <strong style="color:${filterSpecial==='fines'?'#f87171':'#facc15'};">${filterSpecial==='fines'?'🚨 Vehículos con multas/gastos':'🔧 Vehículos con mantenimiento registrado'}</strong></span>
+      <button class="btn btn-ghost btn-sm" onclick="filterSpecial=null;render()">✕ Quitar filtro</button>
+    </div>`:``}
 
     ${alertVehicles.length>0?`
     <div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.3);border-radius:12px;padding:14px 20px;margin-bottom:28px;display:flex;align-items:center;gap:14px;animation:fadeIn 0.3s ease;">
@@ -2117,7 +2132,7 @@ function render() {
           oninput="searchTerm=this.value;renderCards()"
           onfocus="this.style.borderColor='#22d3ee'" onblur="this.style.borderColor='#1e2530'" />
       </div>
-      <select onchange="filterStatus=this.value;render()"
+      <select onchange="filterStatus=this.value;filterSpecial=null;render()"
         style="background:var(--input-bg);border:1px solid var(--border2);color:var(--input-color);border-radius:10px;padding:10px 16px;font-size:14px;outline:none;cursor:pointer;font-family:inherit;">
         <option value="all" ${filterStatus==="all"?"selected":""}>Todos</option>
         <option value="Operando" ${filterStatus==="Operando"?"selected":""}>Operando</option>
